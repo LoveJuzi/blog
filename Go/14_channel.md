@@ -13,3 +13,6 @@ goroutine 的同步工具除了使用传统的同步锁机制，还可以使用�
 ## 缓冲管道和非缓冲管道
 
 ## 只读管道和只写管道的应用
+
+[golang读取关闭channel遇到的问题/如何优雅关闭channel](https://studygolang.com/articles/12763?fr=sidebar)
+[go 关闭channel分析](https://blog.csdn.net/tenfer_fan/article/details/54932798)
