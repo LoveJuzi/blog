@@ -394,9 +394,9 @@ func main() {
 1. 主函数有一个主队列，这个队列排队一些读写任务，0表示读任务，1表示写任务。
 2. 主函数通过对主队列中任务进行分发，读任务分发到读者队列，写任务分发到写者队列。
 3. 主函数分发有如下限制：
-   1. 如果当前有写者在工作，那么不进行任何任务分发，等待写者完成任务。
-   2. 如果当前分发读者任务，主函数需要给读者任务进行计数，当读者任务完成后，主函数需要减去该任务数。
-   3. 如果当前分发写者任务，首先标识有写者进行写任务，禁止主函数继续分发任务，然后，主函数需要等待所有的读者任务完成，也就是读者的任务计数归0，然后才分发写者任务。
+   1. 如果当前有写者在工作，那么不进行任何任务分发，等待写者完成任务
+   2. 如果当前分发读者任务，主函数需要给读者任务进行计数，当读者任务完成后，主函数需要减去该任务数
+   3. 如果当前分发写者任务，首先标识有写者进行写任务，禁止主函数继续分发任务，然后，主函数需要等待所有的读者任务完成，也就是读者的任务计数归0，然后才分发写者任务
    4. 读者不断的从读者队列读取读者任务，每完成一个读者任务，需要通知主函数一个读者任务已完成，读者计数减一
    5. 写者不断的从写者队列读取写者任务，写任务完成，需要通知主函数继续分发新的任务
 
@@ -407,3 +407,255 @@ func main() {
 最后提一点，并不是所有的资源竞争都要用channel，必要的时候使用锁机制也是可以的，尤其是无法对竞争资源进一步划分，比如此例子中的读者计数器。
 
 例子中的“readerFinished”的用法是可以借鉴的，这就是一个协调协程状态的一个channel。
+
+## 线程安全队列---条件变量的方法
+
+```golang
+package main
+
+import (
+  "fmt"
+  "sync"
+)
+
+// TQueue 线程安全队列
+type TQueue struct {
+  Data     []int
+  Len      int
+  beginIdx int
+  endIdx   int
+
+  popmutex  sync.Mutex
+  pushmutex sync.Mutex
+  fullCond  *sync.Cond
+  emptyCond *sync.Cond
+}
+
+// NewTQueue 生成一个队列，需要指定队列的大小
+func NewTQueue(l int) *TQueue {
+  tq := &TQueue{
+    Data:      make([]int, l+1),
+    Len:       l + 1,
+    beginIdx:  0,
+    endIdx:    0,
+    popmutex:  sync.Mutex{},
+    pushmutex: sync.Mutex{},
+  }
+  tq.fullCond = sync.NewCond(&tq.pushmutex)
+  tq.emptyCond = sync.NewCond(&tq.popmutex)
+  return tq
+}
+
+func idxplusplus(idx int, l int) int {
+  return (idx + 1) % l
+}
+
+// IsEmpty 队列是否为空
+func IsEmpty(tq *TQueue) bool {
+  return tq.beginIdx == tq.endIdx
+}
+
+// IsFull 队列是否为满
+func IsFull(tq *TQueue) bool {
+  return tq.beginIdx == idxplusplus(tq.endIdx, tq.Len)
+}
+
+// Push 向队列中添加一个元素
+// 当队列满的时候需要条件等待
+func Push(tq *TQueue, e int) {
+  tq.pushmutex.Lock()
+  defer tq.pushmutex.Unlock()
+
+  for IsFull(tq) {
+    tq.fullCond.Wait()
+  }
+
+  tq.Data[tq.endIdx] = e
+  tq.endIdx = idxplusplus(tq.endIdx, tq.Len)
+
+  tq.emptyCond.Signal()
+}
+
+// Pop 从队列中提取一个元素
+// 当队列空时需要条件等待
+func Pop(tq *TQueue) int {
+  tq.popmutex.Lock()
+  defer tq.popmutex.Unlock()
+
+  for IsEmpty(tq) {
+    tq.emptyCond.Wait()
+  }
+
+  e := tq.Data[tq.beginIdx]
+  tq.beginIdx = idxplusplus(tq.beginIdx, tq.Len)
+
+  tq.fullCond.Signal()
+
+  return e
+}
+
+func main() {
+  done1 := make(chan struct{})
+  done2 := make(chan struct{})
+  tq := NewTQueue(5)
+
+  go func() {
+    for i := 0; i < 50; i++ {
+      fmt.Println("======>", i)
+
+      Push(tq, i)
+    }
+    done1 <- struct{}{}
+  }()
+  go func() {
+    for {
+      e := Pop(tq)
+      fmt.Println(e)
+
+      if e == 49 {
+        break
+      }
+    }
+    done2 <- struct{}{}
+  }()
+
+  <-done1
+  <-done2
+}
+```
+
+## 线程安全队列---channel的方法
+
+```golang
+package main
+
+import (
+  "fmt"
+)
+
+// TQueue 线程安全队列
+type TQueue struct {
+  Data     []int
+  Len      int
+  beginIdx int
+  endIdx   int
+
+  popmutex  chan struct{}
+  pushmutex chan struct{}
+  fullch    chan struct{} //用于检查队列的满
+  emptych   chan struct{} //用于检查队列的空
+}
+
+// NewTQueue 生成一个队列，需要指定队列的大小
+func NewTQueue(l int) *TQueue {
+  return &TQueue{
+    Data:      make([]int, l+1),
+    Len:       l + 1,
+    beginIdx:  0,
+    endIdx:    0,
+    fullch:    make(chan struct{}, l),
+    emptych:   make(chan struct{}, l),
+    popmutex:  make(chan struct{}, 1),
+    pushmutex: make(chan struct{}, 1),
+  }
+}
+
+func idxplusplus(idx int, l int) int {
+  return (idx + 1) % l
+}
+
+// IsEmpty 队列是否为空
+func IsEmpty(tq *TQueue) bool {
+  return tq.beginIdx == tq.endIdx
+}
+
+// IsFull 队列是否为满
+func IsFull(tq *TQueue) bool {
+  return tq.beginIdx == idxplusplus(tq.endIdx, tq.Len)
+}
+
+// Push 向队列中添加一个元素
+// 当队列满的时候需要条件等待
+func Push(tq *TQueue, e int) {
+  tq.fullch <- struct{}{}
+  defer func() {
+    tq.emptych <- struct{}{}
+  }()
+
+  tq.pushmutex <- struct{}{}
+  defer func() {
+    <-tq.pushmutex
+  }()
+
+  tq.Data[tq.endIdx] = e
+  tq.endIdx = idxplusplus(tq.endIdx, tq.Len)
+}
+
+// Pop 从队列中提取一个元素
+// 当队列空时需要条件等待
+func Pop(tq *TQueue) int {
+  <-tq.emptych
+  defer func() {
+    <-tq.fullch
+  }()
+
+  tq.popmutex <- struct{}{}
+  defer func() {
+    <-tq.popmutex
+  }()
+
+  e := tq.Data[tq.beginIdx]
+  tq.beginIdx = idxplusplus(tq.beginIdx, tq.Len)
+
+  return e
+}
+
+func main() {
+  done1 := make(chan struct{})
+  done2 := make(chan struct{})
+  tq := NewTQueue(5)
+
+  go func() {
+    for i := 0; i < 50; i++ {
+      fmt.Println("======>", i)
+
+      Push(tq, i)
+    }
+    done1 <- struct{}{}
+  }()
+  go func() {
+    for {
+      e := Pop(tq)
+      fmt.Println(e)
+
+      if e == 49 {
+        break
+      }
+    }
+    done2 <- struct{}{}
+  }()
+
+  <-done1
+  <-done2
+}
+```
+
+上面是基于两种不同的方式，求解线程安全队列，一种是基于条件变量，一种是基于channel的。实现方面，两者的复杂度差不多，主要说说两者的差别。
+
+使用条件变量的情况，必须使用互斥锁进行搭配，条件变量控制的就是互斥锁的资源状态，条件变量等待的时候，当前会放弃互斥锁的所有权，并且会把自己添加到条件变量唤醒队列中，等到有唤醒信号的时候，从唤醒队列中重新唤醒，然后重新竞争锁，如果得到锁的所有权，重新检查条件，如果不符合条件继续上锁，重复流程。
+
+使用channel的情况略有不同，首先预检查资源是否充足，充足后，再检查是否读权限或写权限，如果有，那么就进行读或写，操作完毕后，还需要将预检查的资源写入到对端资源管道，从而保证同步。
+
+基于上述的一些例子，我们有如下的一些总结：
+
+1. 从任务角度划分，可以使用channel进行任务的解藕，这个是基于通信的理论
+2. 从内存共享的角度，channel可以充当信号量的功能，从而可以等价锁和条件变量的一些代码
+3. 由于条件变量的局限性，或者不便性，对于计数规则，推荐使用sync包的WaitGroup的功能，这个是协程安全的计数器
+
+好了，有了以上程序的一个应用，现在解决另一个问题：golang到底使用channel还是锁？
+
+基于上述的一些研究，我给的答案是，如果做任务划分，使用channel，如果处理内存共享问题，可以使用channel，也可以使用锁，如果处理线程安全计数问题，直接使用sync包中的WaitGroup的功能，不使用channel，也不使用锁。
+
+channel不是万能的，但是经验告诉你，使用channel会更容易对代码进行维护，写程序的大部分时间不是在开发时间，而是在维护时间！！！（这个是我多年的编程经验告诉我的）
+
+## 使用channel实现读写锁
