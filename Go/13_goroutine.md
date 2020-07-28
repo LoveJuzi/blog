@@ -497,6 +497,8 @@ func Pop(tq *TQueue) int {
 func main() {
   done1 := make(chan struct{})
   done2 := make(chan struct{})
+  defer close(done1)
+  defer close(done2)
   tq := NewTQueue(5)
 
   go func() {
@@ -560,6 +562,14 @@ func NewTQueue(l int) *TQueue {
   }
 }
 
+// RleaseTQueue 释放不必要的资源
+func RleaseTQueue(tq *TQueue) {
+  close(tq.fullch)
+  close(tq.emptych)
+  close(tq.popmutex)
+  close(tq.pushmutex)
+}
+
 func idxplusplus(idx int, l int) int {
   return (idx + 1) % l
 }
@@ -613,7 +623,10 @@ func Pop(tq *TQueue) int {
 func main() {
   done1 := make(chan struct{})
   done2 := make(chan struct{})
+  defer close(done1)
+  defer close(done2)
   tq := NewTQueue(5)
+  defer RleaseTQueue(tq)
 
   go func() {
     for i := 0; i < 50; i++ {
@@ -654,8 +667,69 @@ func main() {
 
 好了，有了以上程序的一个应用，现在解决另一个问题：golang到底使用channel还是锁？
 
-基于上述的一些研究，我给的答案是，如果做任务划分，使用channel，如果处理内存共享问题，可以使用channel，也可以使用锁，如果处理线程安全计数问题，直接使用sync包中的WaitGroup的功能，不使用channel，也不使用锁。
+基于上述的一些研究，我给的答案是，如果做任务划分，使用channel，如果处理内存共享问题，可以使用channel，也可以使用锁，推荐使用锁，如果处理线程安全计数问题，直接使用sync包中的WaitGroup的功能，不使用channel，也不使用锁。
 
 channel不是万能的，但是经验告诉你，使用channel会更容易对代码进行维护，写程序的大部分时间不是在开发时间，而是在维护时间！！！（这个是我多年的编程经验告诉我的）
 
 ## 使用channel实现读写锁
+
+```golang
+package main
+
+import "sync"
+
+// RWLock 读写锁
+type RWLock struct {
+  writer   bool
+  writerch chan struct{}
+  wg       *sync.WaitGroup
+}
+
+// NewRWLock 申请读写锁
+func NewRWLock() *RWLock {
+  return &RWLock{
+    writer:   false,                  // 防止写操作饥饿
+    writerch: make(chan struct{}, 1), // 写者互斥
+    wg:       &sync.WaitGroup{},      // 读者计数器
+  }
+}
+
+// RLock 读锁定
+func RLock(rwlock *RWLock) {
+  if rwlock.writer {
+    rwlock.writerch <- struct{}{}
+    <-rwlock.writerch
+  }
+  rwlock.wg.Add(1)
+}
+
+// RUnLock 读解锁
+func RUnLock(rwlock *RWLock) {
+  rwlock.wg.Done()
+}
+
+// Lock 写锁定
+func Lock(rwlock *RWLock) {
+  rwlock.writerch <- struct{}{}
+  rwlock.writer = true
+  rwlock.wg.Wait()
+}
+
+// UnLock 写解锁
+func UnLock(rwlock *RWLock) {
+  rwlock.writer = false
+  <-rwlock.writerch
+}
+
+func main() {
+
+}
+```
+
+读写锁并不好使，比如上面的例子，我做了一个写者优先，当我有大量的写者，那么读者就有可能进入死锁，如果不做写优先，当我有大量的读者，写者可能进入死锁。
+
+产生这个的原因是，读者和写者有个优先权的问题，通常遇到这种情况，业务层需要有一个队列，保证写者和读者的公平性，具体的可以参考读者写者问题。
+
+可以的话将读写锁使用互斥锁替代，提高读者权限。
+
+关于goroutine的相关应用部分就介绍这么多的内容，剩下的就是一些奇技淫巧，一些细节使用需要注意。
