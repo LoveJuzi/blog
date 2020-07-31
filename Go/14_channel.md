@@ -207,7 +207,7 @@ channel很自然的就出现了。
 
 所以，做个总结，管道能做的事情，锁能做，锁能做的事情，管道也能做。如果别人问你，那我如何抉择？是使用锁，还是使用管道？这个问题的回答，不是网上常见的，哪个自然就使用哪个。这个回答是不对的。
 
-如果你对问题的思考，是以通信的方式进行的，那么使用管道，如果你对问题的思考，是以共享内存的方式进行的，那么使用锁？不要在以通信方式思考的代码使用锁，也不要在以共享内存方式的代码中使用管道！！！（这个就是自然的方式，不过笼统的说自然，而不说什么是自然，都是耍流氓）
+**如果你对问题的思考，是以通信的方式进行的，那么使用管道，如果你对问题的思考，是以共享内存的方式进行的，那么使用锁。**不要在以通信方式思考的代码使用锁，也不要在以共享内存方式的代码中使用管道！！！（这个就是自然的方式，不过笼统的说自然，而不说什么是自然，都是耍流氓）
 
 golang的主张是什么呢？
 
@@ -475,10 +475,274 @@ func MPCMain(m, n int) {
 
 这里解释一下分发任务：golang分发任务都是通过channel的，分发到channel也是为了进行任务协调。
 
-小小的总结一下：golang解决问题的方式总体来说就两个大的步骤，任务划分和任务协调！！！
+小小的总结一下：golang解决问题的方式总体来说就两个大的步骤，**任务划分和任务协调！！！**
 
 任务划分的任务如果都是同步任务，使用上面例子的方式就能够有效的进行任务协调，那么，如果是后台任务，任务协调又该怎么做？后面再说。
 
 一个好的任务划分也会减轻任务协调的压力，如果任务划分不合理，那么任务协调也就变的更困难，如果任务协调失败，整个任务就可能失败。
 
 那么，怎么才能有个好的任务划分呢？理解实际问题是解决这个划分的一个出路，不清楚实际问题，无法抽象，那么都没有办法进行任务划分！！！
+
+## 读者写者问题
+
+```golang
+package main
+
+import (
+  "fmt"
+  "math"
+  "math/rand"
+  "sync"
+  "time"
+)
+
+// task 就是任务模板
+// 当我们启动一个新的goroutine的时候，我们相当于启动了一个新的任务
+// 每个任务都有可能出现不同程度的异常
+// task 任务模板的作用就是描述如何处理这些不同程度的异常
+// 以及如何恢复自身任务和其他任务的关系
+
+// 这里写了两个不同的任务模板，一个是“bgtask”，一个是“task”
+// bgtask 是一个后台任务模板
+// 入参有三种类型，一个是任务函数，一个是退出信号通道
+// 另一个是异常恢复函数集
+// bgtask的功能是：
+//   1. 执行任务函数
+//   2. 如果任务函数执行异常，使用异常恢复函数集进行恢复
+//   3. 发送退出信号到退出信号通道
+//   4. 捕获一切此此函数中的异常
+// task 是一个同步任务模板
+// 入参有两种类型，一个是任务函数，一个是异常恢复函数集
+// task的功能是：
+//   1. 执行任务函数（此处使用bgtask进行执行）
+//   2. 发送退出信号
+//   3. 捕获一切此函数中的异常
+
+// 一系列同质的后台任务，也是一个脱离管理的异步任务，只能通过发送退出信号表示退出
+// ech 用来存储任务退出的信号
+func bgtask(f func(), ech chan<- struct{}, rfs ...func()) {
+  go func() {
+    defer recover()                      // 捕获一切异常
+    defer func() { ech <- struct{}{} }() // 发送退出信号
+    defer func() {                       // 捕获任务panic
+      if err := recover(); err != nil {
+        // 记录异常日志
+        fmt.Println(err)
+
+        for _, v := range rfs {
+          v()
+        }
+      }
+    }()
+
+    f()
+  }()
+}
+
+func synctask(f func(), rfs ...func()) <-chan struct{} {
+  d := make(chan struct{})
+  go func() {
+    defer recover()                    // 捕获一切异常
+    defer func() { d <- struct{}{} }() // 发送退出信号
+    ch := make(chan struct{})          // 后台任务退出信号
+    bgtask(f, ch, rfs...)              // 后台处理任务
+    <-ch                               // 等待后台任务结束
+  }()
+  return d
+}
+
+func taskRWMain(ch <-chan int8) func() {
+  return func() {
+    RWMain(ch)
+  }
+}
+
+func taskGenerateReader(ch <-chan int8, rs chan<- struct{}) func() {
+  return func() {
+    GenerateReader(ch, rs)
+  }
+}
+
+func taskGenerateWriter(ch <-chan int8, ws <-chan struct{}) func() {
+  return func() {
+    GenerateWriter(ch, ws)
+  }
+}
+
+func taskReader(r int8) func() {
+  return func() {
+    Reader(r)
+  }
+}
+
+func taskWriter(w int8) func() {
+  return func() {
+    Writer(w)
+  }
+}
+
+// SIZE 队列大小
+const SIZE = 1 << 10
+
+// RWMain 读者写者主程序
+// rs 管道看似多余，其实，这是一种通信管理方式
+// 通过这种方式，我们将计数的操作都限定在主管理函数
+func RWMain(ch <-chan int8) {
+  rch := make(chan int8, SIZE)              // 读者队列
+  wch := make(chan int8, SIZE)              // 写者队列
+  ws := make(chan struct{}, 1)              // 写程序排斥锁
+  rs := make(chan struct{}, math.MaxUint32) // 读者退出信号队列
+  wg := &sync.WaitGroup{}                   // 正在执行读任务的读者计数器
+
+  // 这个其实是一个后台任务，但是我们并不关心它的退出信号，使用同步任务模拟了一下
+  synctask(func() {
+    for range rs { // 读者读任务完毕
+      wg.Done()
+    }
+  }, func() { close(rs) })
+  defer close(rs) // 结束上面的任务，防止goroutine资源不被释放
+
+  waitAllReaderExit := func() { // 检查是否有读者
+    wg.Wait()
+  }
+  waitWriterExit := func() { // 检查是否有写者
+    ws <- struct{}{}
+    <-ws
+  }
+
+  T1 := synctask(taskGenerateReader(rch, rs), func() { close(rch) }, func() { close(rs) })
+  T2 := synctask(taskGenerateWriter(wch, ws), func() { close(wch) }, func() { close(ws) })
+
+  for rw := range ch { // 分发任务
+    waitWriterExit()
+    if rw == 0 {
+      wg.Add(1)
+      rch <- rw
+    } else if rw == 1 {
+      ws <- struct{}{}
+      waitAllReaderExit() // 等待所有的读者退出
+      wch <- rw
+    }
+  }
+
+  waitAllReaderExit()
+  waitWriterExit()
+
+  // 同步任务控制流
+  close(rch) // 通知T1任务结束
+  close(wch) // 通知T2任务结束
+  <-T1       // 等待T1任务结束
+  <-T2       // 等待T2任务结束
+}
+
+// GenerateReader 生成读者
+func GenerateReader(ch <-chan int8, rs chan<- struct{}) {
+  for r := range ch {
+    fmt.Println("读者队列长度：", len(ch))
+    bgtask(taskReader(r), rs) // 启动一个后台读任务
+  }
+}
+
+// GenerateWriter 生成写者
+func GenerateWriter(ch <-chan int8, ws <-chan struct{}) {
+  for w := range ch {
+    fmt.Println("写者队列长度：", len(ch)+1)
+    <-synctask(taskWriter(w)) // 启动一个同步写任务
+    <-ws                      // 释放写者锁
+  }
+}
+
+// Reader 读者
+func Reader(r int8) {
+  fmt.Println("读者正在读...", r)
+  t := time.Second * time.Duration(rand.Intn(5)+2)
+  fmt.Println("读时长：", t)
+  time.Sleep(t)
+}
+
+// Writer 写者
+func Writer(w int8) {
+  fmt.Println("写者正在写...", w)
+  t := time.Second * time.Duration(rand.Intn(5)+2)
+  fmt.Println("写时长：", t)
+  time.Sleep(t)
+}
+
+func main() {
+  ch := make(chan int8, SIZE) // 读写主程序的接收队列
+
+  T := synctask(taskRWMain(ch), func() { close(ch) })
+
+  task := []int8{0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+  for _, v := range task {
+    ch <- v
+  }
+
+  close(ch)
+  <-T
+}
+```
+
+读者写者问题和多生产者多消费者问题，解决的方式是一样的，先任务划分，然后是协调任务。
+
+不过，读者写者问题中对读者的协调工作比较麻烦。我们的解决方案如下：
+
+在读者生成函数GenerateReader中，我们每有一个读者任务，我们都会启动一个后台任务
+
+```golang
+func GenerateReader(ch <-chan int8, rs chan<- struct{}) {
+  for r := range ch {
+    fmt.Println("读者队列长度：", len(ch))
+    bgtask(taskReader(r), rs) // 启动一个后台读任务
+  }
+}
+```
+
+当读者完成任务后，会给rs这个channel发送一个退出信号。
+
+所以，我们在主函数RWMain中，引入两个变量，用来处理读者退出信号
+
+```golang
+rs := make(chan struct{}, math.MaxUint32) // 读者退出信号队列
+wg := &sync.WaitGroup{}                   // 正在执行读任务的读者计数器
+```
+
+rs是一个非常大的信号接收器，wg是一个同步计数器。
+
+处理读者任务退出信号算法步骤如下：
+
+1. 分发读任务的时候，wg计数加1，表示将会有一个后台读任务
+
+    ```golang
+    wg.Add(1)
+    rch <- rw
+    ```
+
+2. 当读任务退出时候，会发送一个退出信号到rs中，这个功能是由函数bgtask完成的
+
+    ```golang
+    defer func() { ech <- struct{}{} }() // 发送退出信号
+    ```
+
+3. 每当有退出信号，计数器wg计数减1
+
+    ```golang
+    synctask(func() {
+      for range rs { // 读者读任务完毕
+        wg.Done()
+      }
+    }, func() { close(rs) })
+    defer close(rs) // 结束上面的任务，防止goroutine资源不被释放
+    ```
+
+4. 这样我们就可以引入阻塞等待函数
+
+    ```golang
+    waitAllReaderExit := func() { // 检查是否有读者
+      wg.Wait()
+    }
+    ```
+
+总之，后台任务的协调还是比较麻烦的，而且处理退出信号的任务，还有可能出现goroutine资源泄漏。
+
+以上两个例子，基本说清了golang的任务划分和任务协调的方式。
