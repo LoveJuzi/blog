@@ -174,4 +174,4 @@ func printTime(standardOutputCh chan string, done chan struct{}) {
 }
 ```
 
-## 输入反射程序
+## 输入回射程序
