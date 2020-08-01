@@ -35,7 +35,7 @@ import (
 
 func bgtask(f func(), ech chan<- struct{}, rfs ...func()) {
   go func() {
-    defer recover()                      // 捕获一切异常
+    defer func() { recover() }()         // 捕获一切异常
     defer func() { ech <- struct{}{} }() // 发送退出信号
     defer func() {                       // 捕获任务panic
       if err := recover(); err != nil {
@@ -55,7 +55,7 @@ func bgtask(f func(), ech chan<- struct{}, rfs ...func()) {
 func synctask(f func(), rfs ...func()) <-chan struct{} {
   d := make(chan struct{})
   go func() {
-    defer recover()                    // 捕获一切异常
+    defer func() { recover() }()         // 捕获一切异常
     defer func() { d <- struct{}{} }() // 发送退出信号
     ch := make(chan struct{})          // 后台任务退出信号
     bgtask(f, ch, rfs...)              // 后台处理任务
@@ -261,7 +261,7 @@ defer func() { ech <- struct{}{} }() // 发送退出信号
 这里顺便解释一下第一条语句的作用，由于defer语句都有可能产生异常，比如上面发送退出信号这条语句，可能ech这个channel被关闭了，从而发送的时候就会异常，为了保证goroutine不会异常退出，我们就继续捕获异常，不过这时候，我们不处理defer的异常，仅仅是调用recover()进行恢复一下就行了。
 
 ```golang
-defer recover()                      // 捕获一切异常
+defer func() { recover() }()         // 捕获一切异常
 ```
 
 第三个参数表示异常恢复函数集，解释一下，当任务函数执行出现异常了，此时，我们需要做两件事情：
@@ -522,7 +522,7 @@ import (
 // ech 用来存储任务退出的信号
 func bgtask(f func(), ech chan<- struct{}, rfs ...func()) {
   go func() {
-    defer recover()                      // 捕获一切异常
+    defer func() { recover() }()         // 捕获一切异常
     defer func() { ech <- struct{}{} }() // 发送退出信号
     defer func() {                       // 捕获任务panic
       if err := recover(); err != nil {
@@ -542,7 +542,7 @@ func bgtask(f func(), ech chan<- struct{}, rfs ...func()) {
 func synctask(f func(), rfs ...func()) <-chan struct{} {
   d := make(chan struct{})
   go func() {
-    defer recover()                    // 捕获一切异常
+    defer func() { recover() }()       // 捕获一切异常
     defer func() { d <- struct{}{} }() // 发送退出信号
     ch := make(chan struct{})          // 后台任务退出信号
     bgtask(f, ch, rfs...)              // 后台处理任务
