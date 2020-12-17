@@ -94,6 +94,8 @@ private:
   }
 };
 
+auto mergeSort = MergeSort();
+
 // 打印数组
 void printArray(std::vector<int> &a)
 {
@@ -103,8 +105,6 @@ void printArray(std::vector<int> &a)
   }
   std::cout << std::endl;
 }
-
-auto mergeSort = MergeSort();
 
 int main()
 {
