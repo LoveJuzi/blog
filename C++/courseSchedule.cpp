@@ -1,56 +1,49 @@
 class Solution
 {
 public:
-  string fractionToDecimal(int numerator, int denominator)
+  vector<string> findItinerary(vector<vector<string>> &tickets)
   {
-    int weizhi; // 当前计算的位置
-    map<int, int> xunhuan; // 当前小数计算位置对应的当前位置
-    vector<int> xiaoshu; // 小数部分的值
-    int zhengshu; // 整数部分的值
-
-    zhengshu = shang(numerator, denominator);
-    numerator = yushu(numerator, denominator);
-    weizhi = 0;
-
-    while (numerator != 0 && xunhuan.find(numerator) != xunhuan.end()) {
-      xiaoshu.push_back(shang(numerator * 10, denominator));
-      xunhuan[numerator] = numerator;
-      numerator = yushu(numerator * 10, denominator);
+    // Each node (airport) contains a set of outgoing edges (destination).
+    map<string, multiset<string>> graph;
+    // We are always appending the deepest node to the itinerary,
+    // so will need to reverse the itinerary in the end.
+    vector<string> itinerary;
+    if (tickets.size() == 0)
+    {
+      return itinerary;
     }
-    xunhuan[0] = -1;
-
-    return join(zhengshu, xiaoshu, xunhuan[numerator]);
-  }
-
-private:
-  string join(int zhengshu, vector<int> &xiaoshu, int weizhi) {
-    string rt;
-
-    rt = std::to_string(zhengshu);
-
-    if (!xiaoshu.empty()) {
-      rt.push_back('.');
+    // Construct the node and assign outgoing edges
+    for (vector<string> eachTicket : tickets)
+    {
+      graph[eachTicket[0]].insert(eachTicket[1]);
     }
-
-    for (int i=0; i<xiaoshu.size(); i++) {
-      if (i == weizhi) {
-        rt.push_back('(');
+    stack<string> dfs;
+    dfs.push("JFK");
+    while (!dfs.empty())
+    {
+      string topAirport = dfs.top();
+      if (graph[topAirport].empty())
+      {
+        // If there is no more outgoing edges, append to itinerary
+        // Two cases:
+        // 1. If it searchs the terminal end first, it will simply get
+        //    added to the itinerary first as it should, and the proper route
+        //    will still be traversed since its entry is still on the stack.
+        // 2. If it search the proper route first, the dead end route will also
+        //    get added to the itinerary first.
+        itinerary.push_back(topAirport);
+        dfs.pop();
       }
-      rt.push_back(xiaoshu[i] + '0');
+      else
+      {
+        // Otherwise push the outgoing edge to the dfs stack and
+        // remove it from the node.
+        dfs.push(*(graph[topAirport].begin()));
+        graph[topAirport].erase(graph[topAirport].begin());
+      }
     }
-
-    if (weizhi != -1) {
-      rt.push_back(')');
-    }
-
-    return rt;
-  }
-
-  int shang(int n, int d) {
-    return n / d;
-  }
-
-  int yushu(int n, int d) {
-    return n % d;
+    // Reverse the itinerary.
+    reverse(itinerary.begin(), itinerary.end());
+    return itinerary;
   }
 };
