@@ -1,37 +1,73 @@
-// condition_variable example
-#include <iostream>           // std::cout
-#include <thread>             // std::thread
-#include <mutex>              // std::mutex, std::unique_lock
-#include <condition_variable> // std::condition_variable
+#include <mutex>
+#include <queue>
+#include <thread>
+#include <condition_variable>
+#include <iostream>
 
-std::mutex mtx;
-std::condition_variable cv;
-bool ready = false;
+using namespace std;
 
-void print_id (int id) {
-  std::unique_lock<std::mutex> lck(mtx);
-  while (!ready) cv.wait(lck);
-  // ...
-  std::cout << "thread " << id << '\n';
-}
-
-void go() {
-  std::unique_lock<std::mutex> lck(mtx);
-  ready = true;
-  cv.notify_all();
-}
-
-int main ()
+class ThQueue
 {
-  std::thread threads[10];
-  // spawn 10 threads:
-  for (int i=0; i<10; ++i)
-    threads[i] = std::thread(print_id,i);
+public:
+    ThQueue() {}
+    void push(int e)
+    {
+        unique_lock<mutex> lck(this->mtx);
+        this->Q.push(e);
+        this->cv.notify_one();
+    }
+    int pop()
+    {
+        unique_lock<mutex> lck(this->mtx);
 
-  std::cout << "10 threads ready to race...\n";
-  go();                       // go!
+        while (this->Q.empty()) {
+            this->cv.wait(lck);
+        }
+        int e = this->Q.front();
+        this->Q.pop();
+        return e;
+    }
 
-  for (auto& th : threads) th.join();
+private:
+    queue<int> Q;
+    mutex mtx;
+    condition_variable cv;
+};
 
-  return 0;
+void f1(ThQueue * thq) {
+    cout << "f1" << endl;
+    for (int i=0; i<1000; i++) {
+        thq->push(i);
+    }
+}
+
+void f2(ThQueue * thq) {
+    cout << "f2" << endl;
+    for (int i=1000; i<2000; i++) {
+        thq->push(i);
+    }
+}
+
+void f3(ThQueue * thq) {
+    cout << "f3" << endl;
+    while (1) {
+        int e = thq->pop();
+        if (e == -9999) {
+            break;
+        }
+        cout << e << endl;
+    }
+}
+
+int main()
+{
+    ThQueue thq;
+    thread th1(f1, &thq);
+    thread th2(f2, &thq);
+    thread th3(f3, &thq);
+    th1.join();
+    th2.join();
+    thq.push(-9999);
+    th3.join();
+    return 0;
 }
