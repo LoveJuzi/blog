@@ -440,3 +440,5 @@ func chatWithPeer(chaincodename string, stream PeerChaincodeStream, cc Chaincode
 
 1. 调试网络通信的过程，我发现寻找到事件循环是一个重要的点，找到事件循环，就能找到对应的注册的执行函数。
 2. 需要找到连接的响应地方，这样可以比较容易的找到事件循环。
+
+## 
