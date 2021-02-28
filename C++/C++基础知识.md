@@ -273,6 +273,74 @@ C++存在四大构造函数：
 
 ~~深拷贝和浅拷贝的理解~~
 
-~~智能指针的实现（这里使用了一个浅拷贝的概念）~~
+智能指针（这里使用了一个浅拷贝的概念）
+
+    智能指针的作用是为了降低程序员对C++指针的管理工作，嗯，智能指针的实现在C++中也是比较容易理解的，采用一个包装类，用这个包装类来管理指针的生命周期。
+
+    包装类采用普通的栈对象，栈对象的管理是由栈内存管理的，所以无需程序员手段清理。
+
+    另外，包装类需要实现指针的一些运算符操作，比如“*”和“->”，还是赋值运算符等等。
+
+智能指针的实现
+
+```c++
+
+```
 
 ~~右值，移动语义~~
+
+~~函数对象~~
+
+## STL
+
+~~emplace_back()~~
+
+lower_bound, upper_bound
+
+    lower_bound算法返回一个非递减序列[first, last)中第一个大于等于值val的位置
+    upper_bound算法返回一个非递减序列[first, last)中第一个大于val的位置
+
+lower_bound的实现
+
+    ```c++
+    int lower_bound(int *array, int size, int key)
+    {
+        int first = 0, middle;
+        int half, len;
+        len = size;
+
+        while(len > 0) {
+            half = len >> 1;
+            middle = first + half;
+            if(array[middle] < key) {     
+                first = middle + 1;          
+                len = len-half-1;       //在右边子序列中查找
+            }
+            else
+                len = half;            //在左边子序列（包含middle）中查找
+        }
+        return first;
+    }
+    ```
+
+upper_bound的实现
+
+    ```c++
+    int upper_bound(int *array, int size, int key)
+    {
+        int first = 0, len = size-1;
+        int half, middle;
+
+        while(len > 0){
+            half = len >> 1;
+            middle = first + half;
+            if(array[middle] > key)     //中位数大于key,在包含last的左半边序列中查找。
+                len = half;
+            else{
+                first = middle + 1;    //中位数小于等于key,在右半边序列中查找。
+                len = len - half - 1;
+            }
+        }
+        return first;
+    }
+    ```
