@@ -283,11 +283,131 @@ C++存在四大构造函数：
 
 智能指针的实现
 
-```c++
+    ```c++
+    // 要求 T 是指针类型，不能是数组类型的指针
+    template <class T>
+    class SmartPointer {
+    private:
+        T * _ptr; // 需要被包装的指针
+        int * _count; // 智能指针的引用计数
 
-```
+    public:
+        SmartPointer(T * ptr = nullptr);
+        SmartPointer(const SmartPointer & oth);
+        ~SmartPointer();
 
-~~右值，移动语义~~
+        SmartPointer<T> & operator=(const SmartPointer & oth);
+
+        T & operator*();
+
+        T * operator->();
+
+    private:
+        // 辅助函数，用来释放引用计数
+        void release();
+    };
+
+    template <class T>
+    SmartPointer<T>::SmartPointer(T * ptr) : _ptr(ptr), _count(nullptr) {
+        if (_ptr != nullptr) {
+            _count = new int(1);
+        }
+    }
+
+    template <class T>
+    SmartPointer<T>::SmartPointer(const SmartPointer & oth) : _ptr(nullptr), _count(nullptr) {
+        if (oth._ptr != nullptr) {
+            _ptr = oth._ptr;
+            _count = oth._count;
+            (*_count)++; // 引用计数+1
+        }
+    }
+
+    template <class T>
+    SmartPointer<T> & SmartPointer<T>::operator = (const SmartPointer & oth) {
+        if (this == &oth) {
+            return *this;
+        }
+
+        release();
+
+        if (oth._ptr != nullptr) {
+            _ptr = oth._ptr;
+            _count = oth._count;
+            (*_count)++; // 引用计数+1
+        }
+
+        return *this;
+    }
+
+    template <class T>
+    SmartPointer<T>::~SmartPointer() {
+        release();
+    }
+
+    template <class T>
+    void SmartPointer<T>::release() {
+        if (_count == nullptr) {
+            return;
+        }
+        (*_count)--; // 引用计数-1
+        if (*_count == 0) {
+            delete _ptr;
+            _ptr = nullptr;
+            delete _count;
+            _count = nullptr;
+        }
+    }
+
+    template <class T>
+    T & SmartPointer<T>::operator *() {
+        assert(this->_ptr != nullptr);
+        return *(this->_ptr);
+    }
+
+    template <class T>
+    T * SmartPointer<T>::operator -> () {
+        assert(this->ptr != nullptr);
+        return this->_ptr;
+    }
+    ```
+
+右值
+
+    右值引用实现了在多种场景下消除了不必要的开销，这句话有点难懂，是怎么消除的呢？
+
+    右值是C++从C继承的概念，最初是指等号右边的值，不过C++的更改了这个定义，C++中的右值指的是临时值或常量，更准确的说，保存在CPU寄存器中的值为右值（这里持怀疑的态度），而保存在内存中的值为左值。
+
+    嗯，更简单的一种判定方式是，如果一个值可以取地址操作，那么他就是左值，否则就是右值。
+
+右值引用
+
+    在C++中我们对左值都有一个左值引用，对于右值，C++ 11也有一个右值引用。
+
+    所谓的右值引用和左值引用一样，在定义的时候就需要初始化，嗯，对于形式化参数也是和左值引用类似。
+
+    不同的是，右值引用只能引用右值类型的数据，不能引用左值类型的数据，左值引用只能引用左值类型的数据，不能引用右值类型的数据。
+
+    嗯，这里还有个问题，对于右值引用能否使用一个右值引用类型的数据呢？
+
+    这种问题，可以这么来想，我们知道在左值引用的情况下，上述的结论是对的，左值引用可以使用一个左值引用类型的数据，所以，反之，右值引用类型是不能引用右值引用类型的数据，因为引用类型本身是左值类型的。
+
+通用引用
+
+    所谓的通用引用，就是既可以引用左值类型的值又可以引用右值类型的引用。
+
+    通用引用有两种定义方式：
+
+        一种是auto，也就是 auto && ，但是 const auto && 这个不是通用引用
+        另一种是通过模板定义的T&&
+
+构造函数的选择问题
+
+    1. C++是支持函数重载的，所谓的函数重载是说，函数的形式参数可以不同
+    2. C++的函数重载是如何进行调用的？这里有个基本的原则，那个更像就调用哪个，换句话说，那个类型更接近我们就调用哪个函数
+
+移动构造函数
+
 
 ~~函数对象~~
 
