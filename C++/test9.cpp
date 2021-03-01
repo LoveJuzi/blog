@@ -1,4 +1,5 @@
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
@@ -10,11 +11,11 @@ private:
     int * _count; // 智能指针的引用计数
 
 public:
-    SmartPointer(T * ptr = nulptr);
+    SmartPointer(T * ptr = nullptr);
     SmartPointer(const SmartPointer & oth);
     ~SmartPointer();
 
-    SmartPointer & operator=(const SmartPointer & oth);
+    SmartPointer<T> & operator=(const SmartPointer & oth);
 
     T & operator*();
 
@@ -23,33 +24,37 @@ public:
 private:
     // 辅助函数，用来释放引用计数
     void release();
-}
+};
 
 template <class T>
-SmartPointer<T>::SmartPointer(T * ptr) : _ptr(ptr), _count(new int(0)) {
+SmartPointer<T>::SmartPointer(T * ptr) : _ptr(ptr), _count(nullptr) {
     if (_ptr != nullptr) {
-        _count++; // 引用计数+1
+        _count = new int(1);
     }
 }
 
 template <class T>
-SmartPointer<T>::SmartPointer(const SmartPointer & oth) {
-    _ptr = oth._ptr;
-    _count = oth._count;
-    *_count++; // 引用计数+1
+SmartPointer<T>::SmartPointer(const SmartPointer & oth) : _ptr(nullptr), _count(nullptr) {
+    if (oth._ptr != nullptr) {
+        _ptr = oth._ptr;
+        _count = oth._count;
+        (*_count)++; // 引用计数+1
+    }
 }
 
 template <class T>
-SmartPointer & SmartPointer<T>::operator = (const SmartPointer & oth) {
+SmartPointer<T> & SmartPointer<T>::operator = (const SmartPointer & oth) {
     if (this == &oth) {
         return *this;
     }
 
     release();
 
-    _ptr = oth._ptr;
-    _count = oth._count;
-    *_count++; // 引用计数+1
+    if (oth._ptr != nullptr) {
+        _ptr = oth._ptr;
+        _count = oth._count;
+        (*_count)++; // 引用计数+1
+    }
 
     return *this;
 }
@@ -61,12 +66,10 @@ SmartPointer<T>::~SmartPointer() {
 
 template <class T>
 void SmartPointer<T>::release() {
-    if (*_count == 0) {
-        delete _count;
-        _count = nullptr;
+    if (_count == nullptr) {
         return;
     }
-    *_count--; // 引用计数-1
+    (*_count)--; // 引用计数-1
     if (*_count == 0) {
         delete _ptr;
         _ptr = nullptr;
@@ -77,20 +80,23 @@ void SmartPointer<T>::release() {
 
 template <class T>
 T & SmartPointer<T>::operator *() {
-    assert(this->_ptr == nullptr);
-    return *(this->ptr);
+    assert(this->_ptr != nullptr);
+    return *(this->_ptr);
 }
 
 template <class T>
 T * SmartPointer<T>::operator -> () {
-    assert(this->ptr == nullptr);
-    return this->ptr;
+    assert(this->ptr != nullptr);
+    return this->_ptr;
 }
 
 int main() {
     SmartPointer<int> a(new int(10));
     SmartPointer<int> b;
-
+    SmartPointer<int> c;
+    c = b;
+    SmartPointer<int> d = a;
     cout << *a << endl;
+    cout << *d << endl;
     return 0;
 }
