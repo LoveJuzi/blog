@@ -2,14 +2,16 @@
 
 using namespace std;
 
-static int A = 10;
+union test1
+{
+    int a;
+    char b[4];
+};
 
-int PrintB() {
-    cout << B << endl;
-}
 
-static int B = 100;
 
 int main() {
-    cout << "hello world" << endl;
+    test1 t;
+    t.a = 1;
+    cout << t.b[0] << endl;
 }
