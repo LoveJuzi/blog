@@ -5,6 +5,8 @@
 using namespace std;
 
 int main() {
+    B bobj;
 
+    bobj.Print();
     return 0;
 }

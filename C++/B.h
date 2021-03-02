@@ -2,24 +2,26 @@
 #define __B_H__
 
 #include "A.h"
+#include <iostream>
+
+using namespace std;
 
 class A;
 class B {
     friend class A;
 public:
-    B(){}
+    B();
+    ~B();
 
     void Print() {
         print();
     }
 
 private:
-    void print() {
-        cout << _aobj._a << endl;
-    }
+    void print();
 
 private:
-    A _aobj;
+    A * _aobj;
 };
 
 #endif
