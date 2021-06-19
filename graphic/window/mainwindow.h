@@ -3,20 +3,15 @@
 
 #include <QMainWindow>
 
-namespace Ui {
-class MainWindow;
-}
+#include "openglwindow.h"
 
-class MainWindow : public QMainWindow
+class MainWindow : public OpenGLWindow
 {
-    Q_OBJECT
-
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    MainWindow();
 
-private:
-    Ui::MainWindow *ui;
+    void initialize() override;
+    void render() override;
 };
 
 #endif // MAINWINDOW_H
