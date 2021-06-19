@@ -3,3 +3,4 @@ moc_*
 *-Debug
 *-Profile
 *-Release
+*.pro.user
