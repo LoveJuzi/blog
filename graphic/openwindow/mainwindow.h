@@ -1,17 +1,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <QOpenGLWindow>
+#include <QOpenGLFunctions_3_3_Core>
 
-#include "openglwindow.h"
-
-class MainWindow : public OpenGLWindow
+class MainWindow : public QOpenGLWindow, protected QOpenGLFunctions_3_3_Core
 {
 public:
     MainWindow();
+    ~MainWindow() override;
 
-    void initialize() override;
-    void render() override;
+protected:
+    void initializeGL() override;
+    void resizeGL(int w, int h) override;
+    void paintGL() override;
 
 protected:
     void keyPressEvent(QKeyEvent *) override;
