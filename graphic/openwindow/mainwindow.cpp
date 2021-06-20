@@ -59,7 +59,7 @@ void MainWindow::initializeGL()
 
 void MainWindow::resizeGL(int w, int h)
 {
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, w, h);
 }
 
 void MainWindow::paintGL()
