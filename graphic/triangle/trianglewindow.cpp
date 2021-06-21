@@ -8,7 +8,6 @@ TriangleWindow::TriangleWindow()
 
 TriangleWindow::~TriangleWindow()
 {
-
 }
 
 float vertices[] = {
