@@ -18,11 +18,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    shader.cpp \
     square.cpp \
     triangle.cpp
 
 HEADERS += \
     mainwindow.h \
+    shader.h \
     square.h \
     triangle.h
 
@@ -30,3 +32,11 @@ HEADERS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    square.fs.glsl \
+    square.vs.glsl
+
+copy_files.files = $$DISTFILES
+copy_files.path = $$OUT_PWD
+COPIES += copy_files

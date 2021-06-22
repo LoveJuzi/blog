@@ -34,5 +34,5 @@ void MainWindow::paintGL()
     _glcore->glClear(GL_COLOR_BUFFER_BIT);
 
     _square->paint();
-    _triangle->paint();
+    // _triangle->paint();
 }

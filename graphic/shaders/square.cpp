@@ -1,7 +1,7 @@
 #include "square.h"
 
 Square::Square(QOpenGLFunctions_3_3_Core* glcore)
-    : _glcore(glcore)
+    : _glcore(glcore), _shader(new Shader(glcore))
 {
 
 }
@@ -18,39 +18,10 @@ static GLuint indices[] = {
     1, 2, 3   // 第二个三角形
 };
 
-static const char *vertexShaderSource =
-        "#version 330 core\n"
-        "layout(location = 0) in vec3 aPos;\n"
-        "void main(){\n"
-        "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-        "}\n\0";
-
-static const char *fragmentShaderSource =
-        "#version 330 core\n"
-        "out vec4 FragColor;\n"
-        "void main(){\n"
-        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-        "}\n\0";
-
 int Square::init()
 {
     // shader
-    auto vertexShader = _glcore->glCreateShader(GL_VERTEX_SHADER);
-    auto fragmentShader = _glcore->glCreateShader(GL_FRAGMENT_SHADER);
-    shaderProgram = _glcore->glCreateProgram();
-
-    _glcore->glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
-    _glcore->glCompileShader(vertexShader);
-
-    _glcore->glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
-    _glcore->glCompileShader(fragmentShader);
-
-    _glcore->glAttachShader(shaderProgram, vertexShader);
-    _glcore->glAttachShader(shaderProgram, fragmentShader);
-    _glcore->glLinkProgram(shaderProgram);
-
-    _glcore->glDeleteShader(vertexShader);
-    _glcore->glDeleteShader(fragmentShader);
+    _shader->build("square.vs.glsl", "square.fs.glsl");
 
     // vertex data
     _glcore->glGenVertexArrays(1, &VAO);
@@ -72,7 +43,7 @@ int Square::init()
 
 int Square::paint()
 {
-    _glcore->glUseProgram(shaderProgram);
+    _shader->use();
 
     _glcore->glBindVertexArray(VAO);
 

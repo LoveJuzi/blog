@@ -1,7 +1,11 @@
 #ifndef SQUARE_H
 #define SQUARE_H
 
+#include <memory>
+
 #include <QOpenGLFunctions_3_3_Core>
+
+#include "shader.h"
 
 class Square
 {
@@ -18,6 +22,8 @@ private:
     GLuint VBO;
     GLuint EBO;
     GLuint shaderProgram;
+
+    std::unique_ptr<Shader> _shader;
 };
 
 #endif // SQUARE_H
