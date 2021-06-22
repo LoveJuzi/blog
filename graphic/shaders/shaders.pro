@@ -37,6 +37,6 @@ DISTFILES += \
     square.fs.glsl \
     square.vs.glsl
 
-copy_files.files = $$DISTFILES
-copy_files.path = $$OUT_PWD
-COPIES += copy_files
+copy_glsl.files = $$DISTFILES
+copy_glsl.path = $$OUT_PWD
+COPIES += copy_glsl
