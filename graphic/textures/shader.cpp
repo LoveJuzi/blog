@@ -69,3 +69,8 @@ void Shader::use()
 {
     _glcore->glUseProgram(shaderProgram);
 }
+
+void Shader::setInt(const std::string& name, int value)
+{
+    _glcore->glUniform1i(_glcore->glGetUniformLocation(shaderProgram, name.c_str()), value);
+}

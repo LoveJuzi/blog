@@ -22,7 +22,8 @@ private:
     GLuint VBO;
     GLuint EBO;
     GLuint shaderProgram;
-    GLuint texture;
+    GLuint texture1;
+    GLuint texture2;
 
     std::unique_ptr<Shader> _shader;
 };

@@ -36,6 +36,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES += \
+    awesomeface.png \
     square.fs.glsl \
     square.vs.glsl \
     wall.jpg
