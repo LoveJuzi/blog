@@ -15,6 +15,7 @@ public:
     void setBool(const std::string& name, bool value);
     void setInt(const std::string& name, int value);
     void setFloat(const std::string& name, int value);
+    void setMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat *value);
 
     GLuint getID() const { return shaderProgram; }
 private:

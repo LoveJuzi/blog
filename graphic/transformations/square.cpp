@@ -101,9 +101,7 @@ int Square::init()
     _shader->use();
     _shader->setInt("texture1", 0);
     _shader->setInt("texture2", 1);
-    GLuint tranformLoc = _glcore->glGetUniformLocation(_shader->getID(), "transform");
-    _glcore->glUniformMatrix4fv(tranformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
+    _shader->setMatrix4fv("transform", 1, GL_FALSE, glm::value_ptr(trans));
 
     return 0;
 }

@@ -74,3 +74,9 @@ void Shader::setInt(const std::string& name, int value)
 {
     _glcore->glUniform1i(_glcore->glGetUniformLocation(shaderProgram, name.c_str()), value);
 }
+
+void Shader::setMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    _glcore->glUniformMatrix4fv(_glcore->glGetUniformLocation(shaderProgram, name.c_str()),
+                                1, GL_FALSE, value);
+}
