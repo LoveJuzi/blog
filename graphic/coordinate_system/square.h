@@ -4,6 +4,8 @@
 #include <memory>
 
 #include <QOpenGLFunctions_3_3_Core>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
 
@@ -15,6 +17,10 @@ public:
     int init();
     int paint();
 
+    void setModel(const glm::mat4& mat);
+    void setView(const glm::mat4& mat);
+    void setProjection(const glm::mat4& mat);
+
 private:
     QOpenGLFunctions_3_3_Core* _glcore;
 
@@ -23,6 +29,10 @@ private:
     GLuint EBO;
     GLuint texture1;
     GLuint texture2;
+
+    glm::mat4 _model;
+    glm::mat4 _view;
+    glm::mat4 _projection;
 
     std::unique_ptr<Shader> _shader;
 };

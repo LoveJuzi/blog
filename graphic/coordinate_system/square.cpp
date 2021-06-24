@@ -128,28 +128,39 @@ int Square::init()
         stbi_image_free(data);
     }
 
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-
-    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-    projection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+    _model = glm::mat4(1.0f);
+    _view = glm::mat4(1.0f);
+    _projection = glm::mat4(1.0f);
 
     _shader->use();
     _shader->setInt("texture1", 0);
     _shader->setInt("texture2", 1);
-    _shader->setMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(model));
-    _shader->setMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(view));
-    _shader->setMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(projection));
 
     return 0;
 }
 
+void Square::setView(const glm::mat4 &mat)
+{
+    _view = mat;
+}
+
+void Square::setModel(const glm::mat4 &mat)
+{
+    _model = mat;
+}
+
+void Square::setProjection(const glm::mat4 &mat)
+{
+    _projection = mat;
+}
+
 int Square::paint()
 {
-    _glcore->glEnable(GL_DEPTH_TEST);
     _shader->use();
+
+    _shader->setMatrix4fv("model", 1, GL_FALSE, glm::value_ptr(_model));
+    _shader->setMatrix4fv("view", 1, GL_FALSE, glm::value_ptr(_view));
+    _shader->setMatrix4fv("projection", 1, GL_FALSE, glm::value_ptr(_projection));
 
     _glcore->glActiveTexture(GL_TEXTURE0);
     _glcore->glBindTexture(GL_TEXTURE_2D, texture1);
