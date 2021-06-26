@@ -29,13 +29,16 @@ protected:
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
+    void keyPressEvent(QKeyEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+
 private:
     QOpenGLFunctions_3_3_Core* _glcore;
 
     std::vector<std::shared_ptr<Square>> _squares;
 
     Camera    _camera;
-    glm::vec3 _cameraPosition;
+    QPoint    _center;
     glm::mat4 _projection;
 
     std::unique_ptr<QTimer>   _rotateTimer;
