@@ -1,0 +1,6 @@
+.qmake.stash
+moc_*
+*-Debug
+*-Profile
+*-Release
+*.pro.user
