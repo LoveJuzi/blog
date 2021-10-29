@@ -1,4 +1,6 @@
 # Qt module 
+QT_INC_DIR      := "/home/juzi/Qt5.9.4/5.9.4/gcc_64/include"
+QT_LIB_DIR      := "/home/juzi/Qt5.9.4/5.9.4/gcc_64/lib"
 QT_INC          := "-isystem" "$(QT_INC_DIR)/QtCore" "-isystem" "$(QT_INC_DIR)/QtGui"
 QT_INC          += "-isystem" "$(QT_INC_DIR)/QtSvg" "-isystem" "$(QT_INC_DIR)/QtUiTools"
 QT_INC          += "-isystem" "$(QT_INC_DIR)/QtXml" "-isystem" "$(QT_INC_DIR)"

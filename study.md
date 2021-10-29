@@ -4,6 +4,8 @@
 
 1. 调整 vim 的 tab 设置
 2. vim 的 filetype 如何检查
+3. 复制文件名
+4. 查找库 pkg-config
 
 ## 2021-10-28
 
