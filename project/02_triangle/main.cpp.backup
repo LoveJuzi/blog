@@ -59,18 +59,12 @@ int main() {
     // deal view port
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+
     float vertices[] = {
-         0.5f,  0.5f, 0.0f, // 右上角
-         0.5f, -0.5f, 0.0f, // 右下角
-        -0.5f, -0.5f, 0.0f, // 左下角
-        -0.5f,  0.5f, 0.0f, // 左上角
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f,
     };
-
-    unsigned int indices[] = {
-        0, 1, 3,  // 第一个三角形
-        1, 2, 3   // 第二个三角形
-    };
-
     int success;
     char infoLog[512];
 
@@ -114,10 +108,6 @@ int main() {
     glGenBuffers(1, &VBO);
     utDefer(glDeleteBuffers(1, &VBO));
 
-    unsigned int EBO;
-    glGenBuffers(1, &EBO);
-    utDefer(glDeleteBuffers(1, &EBO));
-
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     utDefer(glDeleteVertexArrays(1, &VAO));
@@ -127,10 +117,7 @@ int main() {
     // 2. 复制顶点数组到缓冲中
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // 3. 复制我们的索引数组到一个索引缓冲中
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    // 4. 设置顶点属性指针
+    // 3. 设置顶点属性指针
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -141,12 +128,10 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 5. 绘制物体
+        // 4. 绘制物体
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        // glDrawArrays(GL_TRIANGLES, 0, 3);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

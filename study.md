@@ -9,6 +9,8 @@
 5. 下载 tkdiff
 6. centos8 如何快捷键切换窗口
 7. google 单元测试，可以不引入，暂时不重要
+8. vim 同时在多行末尾添加相同的字符 https://blog.csdn.net/CPriLuke/article/details/104077635
+9. glsl 语法高亮 https://blog.csdn.net/icbm/article/details/52861606
 
 centos8 是使用 `dnf` 来管理软件的。
 如果想查找软件使用 `search` 子命令，想安装软件使用 `install` 命令

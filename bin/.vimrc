@@ -108,9 +108,18 @@ function! MakeConf()
   set softtabstop=0
 endfunction
 
+function! GLSLConf()
+  set tabstop=4
+  set softtabstop=4
+  set shiftwidth=4
+  set expandtab
+endfunction
+
 if has("autocmd")
   filetype on
   autocmd BufReadPost *.rkt,*.rktl set filetype=scheme
+  autocmd BufNewFile,BufRead *.hlsl,*.fx,*.fxh setfiletype fx
+  autocmd BufNewFile,BufRead *.frag,*.vert,*.fp,*.vp,*.glsl setf glsl
   autocmd FileType markdown call MarkdownConf()
   autocmd FileType cpp      call CppConf()
   autocmd FileType hpp      call CppConf()
@@ -119,6 +128,8 @@ if has("autocmd")
   autocmd FileType c        call CppConf()
   autocmd FileType scheme   call SchemeConf()
   autocmd FileType make     call MakeConf()
+  autocmd FileType shader   call ShaderConf()
+  autocmd FileType glsl     call GLSLConf()
 endif
 
 map <F3> :call CurrentFilePath()<cr>
