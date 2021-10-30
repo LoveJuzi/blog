@@ -25,7 +25,7 @@ CXX := g++ "-I." "-fPIC" "-lrt" "-lm" "-lpthread"
 #CXX += $(QT_INC)$(QT_LIB)  # include Qt library
 CXX += $(GLFW_LIB) # include GLFW library
 
-SOURCES  := $(shell find -L . -type f -name "*.cpp")
+SOURCES  := $(shell find . -type f | grep \.cpp$)
 OBJECTS  := $(SOURCES:.cpp=.o) 
 TAGET    := a.out
 

@@ -12,7 +12,7 @@ GLFWwindow* window;
 // Include GLM
 #include <glm/glm.hpp>
 
-#include <common/shader.hpp>
+#include "common/shader.hpp"
 
 int main( void )
 {
