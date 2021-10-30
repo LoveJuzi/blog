@@ -6,9 +6,8 @@ if (( $# >= 1 )); then
     name=$1
 fi
 
-gvim "+cd $name" \
-    "+ set tags += tags;,./tags" \
-    "+ set path += $name/**"  \
-    "+ set path += /usr/local/include/**"  \
+gvim "+ cd $name" \
+    "+ set tags+=tags;,./tags" \
+    "+ set path+=$name/**" \
+    "+ set path+=/usr/local/include/**"  \
     $name/.label_0_0 $name/.project_0_0 $name/.tmp_0_0
-

@@ -4,8 +4,8 @@
 
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-
+#include < glm /glm.hpp>
+glm
 #include "common/utDefer.h"
 
 int main() {
