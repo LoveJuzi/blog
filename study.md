@@ -4,6 +4,13 @@
 
 1. 编写生成特定 lib 的 ctagsl
 2. 完成 opengl 第一章的学习
+3. 完成 `Makefile_opengl` 的编写
+4. 完成 bin/project 的编写
+5. 下载 tkdiff
+6. centos8 如何快捷键切换窗口
+
+centos8 是使用 `dnf` 来管理软件的。
+如果想查找软件使用 `search` 子命令，想安装软件使用 `install` 命令
 
 ## 2021-10-29
 
