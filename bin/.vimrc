@@ -176,7 +176,8 @@ map <F3> :call CurrentFilePath()<cr>
 function CurrentFilePath()
   normal my
   if has('gui_running')
-    execute 'let @+=expand("%:p")'
+    "execute 'let @+=expand("%:p")'
+    execute 'let @+=expand("%:.")'
   else
     execute 'let @1=expand("%:.")'
   endif
