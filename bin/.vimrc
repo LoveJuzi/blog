@@ -29,6 +29,8 @@ set textwidth=90
 
 set laststatus=2
 
+set autowrite
+
 set showmatch
 
 set hlsearch

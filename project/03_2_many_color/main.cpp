@@ -6,8 +6,8 @@
 
 #include <glm/glm.hpp>
 
-#include "common/utDefer.h"
-#include "common/Shader.h"
+#include "utils/utDefer.h"
+#include "utils/Shader.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
