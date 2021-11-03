@@ -56,6 +56,8 @@ set wildmenu
 set wildmode=longest:list,full
 set backspace=indent,eol,start
 
+set ruler
+
 " visual search
 xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<CR><CR>
 xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<CR><CR>
