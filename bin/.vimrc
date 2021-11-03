@@ -7,8 +7,11 @@ syntax on
 " mode
 set showmode
 
-"
+" display the current commmand in right-low of screen
 set showcmd
+
+" auto write current file when go to another file
+set autowrite
 
 " file encoding
 set encoding=utf-8
@@ -29,8 +32,6 @@ set textwidth=90
 
 set laststatus=2
 
-set autowrite
-
 set showmatch
 
 set hlsearch
@@ -43,9 +44,9 @@ set smartcase
 
 set undofile
 
-set backupdir=/home/juzi/.vim/.backup/
-set directory=/home/juzi/.vim/.swp/
-set undodir=/home/juzi/.vim/.undo/
+set backupdir=~/.vim/.backup/
+set directory=~/.vim/.swp/
+set undodir=~/.vim/.undo/
 
 set noerrorbells
 
@@ -78,6 +79,11 @@ colorscheme peachpuff
 let g:netrw_banner=0
 
 set noeb
+
+set guifont=Consolas:h10
+
+winpos 435 175 
+"set lines=43 columns=140 
 
 " use your hand
 " autocmd BufWritePost *.c,*.cpp,*.h !ctags -R
