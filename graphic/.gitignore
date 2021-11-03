@@ -4,3 +4,4 @@ moc_*
 *-Profile
 *-Release
 *.pro.user
+build
