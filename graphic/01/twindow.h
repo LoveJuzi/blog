@@ -3,6 +3,7 @@
 
 #include <QOpenGLWindow>
 #include <QOpenGLFunctions_3_3_Core>
+#include <QKeyEvent>
 
 class TWindow : public QOpenGLWindow, protected QOpenGLFunctions_3_3_Core {
 public:
@@ -13,6 +14,9 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
+
+    void keyPressEvent(QKeyEvent* e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
 
 private:
     GLuint VAO;           // VAO 对象

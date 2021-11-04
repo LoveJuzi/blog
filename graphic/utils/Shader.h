@@ -1,6 +1,7 @@
 #ifndef SHADER_H_
 #define SHADER_H_
 
+#if 0
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -26,5 +27,6 @@ public:
 private:
     unsigned int _id;
 };
+#endif
 
 #endif // SHADER_H_

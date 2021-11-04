@@ -22,6 +22,16 @@ GLuint indices[] = {
     1, 2, 3   // 第二个三角形
 };
 
+float triangleVertices[] = {
+     0.0f,  0.5f, 0.0f,  // 顶点
+    -0.5f, -0.5f, 0.0f,  // 左下角
+     0.5f, -0.5f, 0.0f,  // 右下角
+};
+
+GLuint triangleIndices[] = {
+    0, 1, 2,  // 第一个三角形
+};
+
 const char *vertexShaderSource =
         "#version 330 core\n"
         "layout(location = 0) in vec3 aPos;\n"
@@ -44,9 +54,13 @@ void TWindow::initializeGL() {
     // 1. deal shader
     // create vertex shader
     auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // delete vertex shader
+    utDefer(glDeleteShader(vertexShader));
 
     // create fragment shader
     auto fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // delete fragment shader
+    utDefer(glDeleteShader(fragmentShader));
 
     // create sharder
     shaderProgram = glCreateProgram();
@@ -72,13 +86,6 @@ void TWindow::initializeGL() {
     // link shaders
     glLinkProgram(shaderProgram);
 
-    // delete vertex shader
-    glDeleteShader(vertexShader);
-
-    // delete fragment shader
-    glDeleteShader(fragmentShader);
-
-
     // 2. deal vertex data
     // create VAO
     glGenVertexArrays(1, &VAO);
@@ -94,24 +101,19 @@ void TWindow::initializeGL() {
 
     // bind VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // VAO buffer data
+    glBufferData(GL_ARRAY_BUFFER, sizeof(triangleVertices), triangleVertices, GL_STATIC_DRAW);
 
     // bind EBO
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-    // VAO buffer data
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     // EBO buffer data
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(triangleIndices), triangleIndices, GL_STATIC_DRAW);
 
     // set vertex attribute pointer
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (GLvoid*)0);
 
-    // enable vertex atrribute array
-    glEnableVertexAttribArray(0);
-
     // 3. init window size
-    resize(QSize(800, 600));
+    resize(QSize(600, 600));
 }
 
 void TWindow::resizeGL(int w, int h) {
@@ -129,10 +131,24 @@ void TWindow::paintGL() {
     // bind vertex array object
     glBindVertexArray(VAO);
 
+    // enable vertex atrribute array
+    glEnableVertexAttribArray(0);
+
     // draw
     // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (GLvoid*)0);
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (GLvoid*)0);
 
     // release VAO
     glBindVertexArray(0);
+}
+
+void TWindow::keyPressEvent(QKeyEvent* e) {
+    if (e->key() == Qt::Key_Escape) {
+        close();
+        return;
+    }
+}
+
+void TWindow::mouseMoveEvent(QMouseEvent *e) {
+    Q_UNUSED(e);
 }
