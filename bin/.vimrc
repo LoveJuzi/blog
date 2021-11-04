@@ -82,7 +82,7 @@ let g:netrw_banner=0
 
 set noeb
 
-set guifont=Consolas:h10
+"set guifont=Consolas:h10
 
 winpos 435 175 
 "set lines=43 columns=140 
