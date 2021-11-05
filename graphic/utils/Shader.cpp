@@ -1,11 +1,19 @@
 #include "Shader.h"
 
-#if 0
-#include <glm/gtc/type_ptr.hpp>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
-#include "utDefer.h"
+#include "utils/utDefer.h"
+#include "utils/OpenGLSingleton.h"
+#include "glm/gtc/type_ptr.hpp"
 
-Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
+Shader::Shader() {}
+
+Shader::~Shader() {}
+
+bool Shader::init(const GLchar* vertexPath, const GLchar* fragmentPath) {
     // 1. 从文件路径中获取顶点/片段着色器
     std::string vertexCode;
     std::string fragmentCode;
@@ -37,76 +45,85 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
         fragmentCode = fShaderStream.str();
 
     } catch (std::ifstream::failure e) {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+        return false;
     }
 
-    const char* vShaderCode = vertexCode.c_str();
-    const char* fShaderCode = fragmentCode.c_str();
+	std::cout << "H1" << std::endl;
 
+    const GLchar* vShaderCode = vertexCode.c_str();
+    const GLchar* fShaderCode = fragmentCode.c_str();
 
     // 2. 编译着色器
-    unsigned int vertex, fragment;
-    int success;
-    char infoLog[512];
-
+    GLuint vertex, fragment;
+    int    success;
+    char   infoLog[512];
 
     // 顶点着色器
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    utDefer(glDeleteShader(vertex));
+    vertex = OpenGLInstance->glCreateShader(GL_VERTEX_SHADER);
+    utDefer(OpenGLInstance->glDeleteShader(vertex));
 
-    glShaderSource(vertex, 1, &vShaderCode, NULL);
-    glCompileShader(vertex);
+    OpenGLInstance->glShaderSource(vertex, 1, &vShaderCode, NULL);
+    OpenGLInstance->glCompileShader(vertex);
     // 打印编译错误
-    glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+    OpenGLInstance->glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        OpenGLInstance->glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        return false;
     }
 
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    utDefer(glDeleteShader(fragment));
+    // 片段着色器
+    fragment = OpenGLInstance->glCreateShader(GL_FRAGMENT_SHADER);
+    utDefer(OpenGLInstance->glDeleteShader(fragment));
 
-    glShaderSource(fragment, 1, & fShaderCode, NULL);
-    glCompileShader(fragment);
-    glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+    OpenGLInstance->glShaderSource(fragment, 1, & fShaderCode, NULL);
+    OpenGLInstance->glCompileShader(fragment);
+    // 打印编译错误
+    OpenGLInstance->glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        OpenGLInstance->glGetShaderInfoLog(fragment, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        return false;
     }
 
-    _id = glCreateProgram();
-    glAttachShader(_id, vertex);
-    glAttachShader(_id, fragment);
-    glLinkProgram(_id);
+    // 着色器程序
+    _id = OpenGLInstance->glCreateProgram();
+    OpenGLInstance->glAttachShader(_id, vertex);
+    OpenGLInstance->glAttachShader(_id, fragment);
+    OpenGLInstance->glLinkProgram(_id);
     // 打印链接错误
-    glGetProgramiv(_id, GL_LINK_STATUS, &success);
+    OpenGLInstance->glGetProgramiv(_id, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(_id, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        OpenGLInstance->glGetProgramInfoLog(_id, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 void Shader::use() {
-    glUseProgram(_id);
+    OpenGLInstance->glUseProgram(_id);
 }
 
-unsigned int Shader::ID() const {
-    return _id;
+GLuint Shader::ID() const { 
+    return _id; 
 }
 
 void Shader::setBool(const std::string& name, bool value) const {
-    glUniform1i(glGetUniformLocation(_id, name.c_str()), (int)value);
+    OpenGLInstance->glUniform1i(OpenGLInstance->glGetUniformLocation(_id, name.c_str()), (int)value);
 }
 
 void Shader::setInt(const std::string& name, int value) const {
-    glUniform1i(glGetUniformLocation(_id, name.c_str()), value);
+    OpenGLInstance->glUniform1i(OpenGLInstance->glGetUniformLocation(_id, name.c_str()), value);
 }
 
 void Shader::setFloat(const std::string& name, float value) const {
-    glUniform1f(glGetUniformLocation(_id, name.c_str()), value);
+    OpenGLInstance->glUniform1f(OpenGLInstance->glGetUniformLocation(_id, name.c_str()), value);
 }
 
 void Shader::setMat4(const std::string& name, const glm::mat4& value) const {
-    glUniformMatrix4fv(glGetUniformLocation(_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+    OpenGLInstance->glUniformMatrix4fv(OpenGLInstance->glGetUniformLocation(_id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
 }
-#endif
+

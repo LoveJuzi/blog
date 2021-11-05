@@ -154,3 +154,5 @@ function CurrentFilePath()
   echohl WarningMsg | echo "Successful in get current file path." | echohl None
   normal `y
 endfunction
+
+map <C-e> :Ex<cr>

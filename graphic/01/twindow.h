@@ -5,7 +5,10 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QKeyEvent>
 
-class TWindow : public QOpenGLWindow, protected QOpenGLFunctions_3_3_Core {
+#include "utils/Shader.h"
+
+// twindow.cpp
+class TWindow : public QOpenGLWindow {
 public:
     TWindow();
     ~TWindow() override;
@@ -22,7 +25,8 @@ private:
     GLuint VAO;           // VAO 对象
     GLuint VBO;           // VBO 对象
     GLuint EBO;           // EBO 对象
-    GLuint shaderProgram; // 着色器程序
+
+    Shader shader;        // 着色器
 };
 
 #endif // TWINDOW_H

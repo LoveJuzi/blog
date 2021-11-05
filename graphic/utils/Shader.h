@@ -1,22 +1,20 @@
-#ifndef SHADER_H_
-#define SHADER_H_
+#ifndef SHADER_H
+#define SHADER_H
 
-#if 0
-#include <GL/glew.h>
-#include <glm/glm.hpp>
+#include <QOpenGLFunctions_3_3_Core>
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include "glm/glm.hpp"
 
 // Shader.cpp
 class Shader {
 public:
-    Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+    Shader();
+    ~Shader();
+
+    bool init(const GLchar* vertexPath, const GLchar* fragmentPath);
 
     void use();
-    unsigned int ID() const;
+    GLuint ID() const;
 
     //uniform 工具函数
     void setBool(const std::string& name, bool value) const;
@@ -25,8 +23,7 @@ public:
     void setMat4(const std::string& name, const glm::mat4& value) const;
 
 private:
-    unsigned int _id;
+    GLuint _id;
 };
-#endif
 
-#endif // SHADER_H_
+#define SHADER_H

@@ -2,7 +2,7 @@ QT += gui core
 
 greaterThan(QT_MAJOR_VERSION, 5): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++11 debug
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -20,9 +20,14 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-INCLUDEPATH += ../
-
 HEADERS += $$files(*.ui.h, true) 
 SOURCES += $$files(*.cpp, true)
-SOURCES += $$files(../utils/*.cpp, true)
+
+DISTFILES += \
+    simpleFragmentShader.glsl \
+    simpleVertexShader.glsl \
+
+copy_glsl.files = $$DISTFILES
+copy_glsl.path = $$OUT_PWD
+COPIES += copy_glsl
 
