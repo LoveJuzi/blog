@@ -6,7 +6,7 @@ if (( $# >= 1 )); then
     name=$1
 fi
 
-gvim "+ cd $name" \
+vim "+ cd $name" \
     "+ set tags+=tags;,./tags" \
     "+ set tags+=$QT_INC_DIR/tags" \
     "+ set path+=$name/**" \
