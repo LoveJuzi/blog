@@ -18,8 +18,7 @@ set encoding=utf-8
 
 set t_Co=256
 
-filetype indent on
-
+filetype indent on 
 set autoindent
 
 set textwidth=90
