@@ -26,4 +26,4 @@ private:
     GLuint _id;
 };
 
-#define SHADER_H
+#endif // SHADER_H
