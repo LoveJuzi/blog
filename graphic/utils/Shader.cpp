@@ -49,8 +49,6 @@ bool Shader::init(const GLchar* vertexPath, const GLchar* fragmentPath) {
         return false;
     }
 
-	std::cout << "H1" << std::endl;
-
     const GLchar* vShaderCode = vertexCode.c_str();
     const GLchar* fShaderCode = fragmentCode.c_str();
 
