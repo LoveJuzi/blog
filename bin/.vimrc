@@ -155,3 +155,4 @@ function CurrentFilePath()
 endfunction
 
 map <C-e> :Ex<cr>
+map <C-d> :bf<cr>

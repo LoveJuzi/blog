@@ -22,8 +22,7 @@ SOURCES += \
     mainwindow.cpp \
     shader.cpp \
     square.cpp \
-    stb_image.cpp \
-    triangle.cpp
+    stb_image.cpp
 
 HEADERS += \
     camera.h \

@@ -1,5 +1,7 @@
 #include "Camera.h"
 
+#include <iostream>
+
 Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     : _front(glm::vec3(0.0f, 0.0f, -1.0f)), _movementSpeed(SPEED),
     _mouseSensitivity(SENSITIVITY), _zoom(ZOOM)
@@ -44,14 +46,14 @@ void Camera::processKeyboard(CameraMovement direction, float deltaTime) {
     }
 }
 
-void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
+void Camera::processMouseMovement(float xoffset, float yoffset, bool constraintPitch) {
     xoffset *= _mouseSensitivity;
     yoffset *= _mouseSensitivity;
 
     _yaw += xoffset;
     _pitch += yoffset;
 
-    if (constrainPitch) {
+    if (constraintPitch) {
         if (_pitch > 89.0f) {
             _pitch = 89.0f;
         } else if (_pitch < -89.0f) {
