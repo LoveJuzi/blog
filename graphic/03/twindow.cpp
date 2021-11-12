@@ -154,7 +154,7 @@ bool Cube::init() {
 bool Cube::draw() {
     // bind vertex array object
     OpenGLInstance->glBindVertexArray(_VAO);
-    OpenGLInstance->glDrawElements(GL_TRIANGLES, sizeof(_cubeIndices)/sizeof(GLuint), GL_UNSIGNED_INT, (GLvoid*)0);
+    OpenGLInstance->glDrawElements(GL_TRIANGLES, _cubeIndices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
 
     // release VAO
     OpenGLInstance->glBindVertexArray(0);
@@ -223,6 +223,8 @@ void TWindow::resizeGL(int w, int h) {
 }
 
 void TWindow::paintGL() {
+
+
     // clear background
     OpenGLInstance->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     OpenGLInstance->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -269,7 +271,7 @@ void TWindow::keyPressEvent(QKeyEvent* e) {
         return;
     }
 
-    // 前后移https://learnopengl.com/code_viewer_gh.php?code=src/2.lighting/1.colors/colors.cpp动
+    // 前后移动
     if (e->key() == Qt::Key_W) {
         camera.processKeyboard(FORWARD, deltaTime);
     } else if (e->key() == Qt::Key_S) {
@@ -290,12 +292,15 @@ void TWindow::mouseMoveEvent(QMouseEvent *e) {
     if (!initCursor) return;
 
     GLint xoffset = e->x() - center.x();
-    GLint yoffset = e->y() - center.y();
+    GLint yoffset = center.y() - e->y();
 
     QCursor::setPos(mapToGlobal(center));
+    std::cout << center.x() << std::endl;
 
     if (xoffset == 0 && yoffset == 0) { return; }
-    if (xoffset > 100 || yoffset > 100) { return; }
+    if (xoffset > 100 || yoffset > 100) { 
+        update(); return; 
+    }
 
     camera.processMouseMovement(xoffset, yoffset);
 
