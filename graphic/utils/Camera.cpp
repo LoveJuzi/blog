@@ -30,8 +30,6 @@ void Camera::updateCameraVectors() {
     _front = glm::normalize(front);
     _right = glm::normalize(glm::cross(_front, _worldUp));
     _up    = glm::normalize(glm::cross(_right, _front));
-
-    std::cout << "======>_front: " << glm::to_string(_front) << std::endl;
 }
 
 void Camera::processKeyboard(CameraMovement direction, float deltaTime) {
@@ -59,9 +57,6 @@ void Camera::processMouseMovement(float xoffset, float yoffset, bool constraintP
 
     if (constraintPitch && _pitch >  89.0f) _pitch = 89.0f;
     if (constraintPitch && _pitch < -89.0f) _pitch = -89.0f;
-
-    std::cout << "======>_yaw: " << _yaw << std::endl;
-    std::cout << "======>_pitch: " << _pitch << std::endl;
 
     updateCameraVectors();
 }

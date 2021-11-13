@@ -295,7 +295,6 @@ void TWindow::mouseMoveEvent(QMouseEvent *e) {
     GLint yoffset = center.y() - e->y();
 
     QCursor::setPos(mapToGlobal(center));
-    std::cout << center.x() << std::endl;
 
     if (xoffset == 0 && yoffset == 0) { return; }
     if (xoffset > 100 || yoffset > 100) { 
