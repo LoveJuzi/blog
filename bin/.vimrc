@@ -14,6 +14,8 @@ set showcmd
 set autowrite
 
 " file encoding
+set fileencodings=utf-8,ucs-bom,gb18030,gbk,gb2312,cp936
+set termencoding=utf-8
 set encoding=utf-8
 
 set t_Co=256
@@ -146,12 +148,7 @@ endif
 map <F3> :call CurrentFilePath()<cr>
 function CurrentFilePath()
   normal my
-  if has('gui_running')
-    "execute 'let @+=expand("%:p")'
-    execute 'let @+=expand("%:.")'
-  else
-    execute 'let @1=expand("%:.")'
-  endif
+  execute 'let @+=expand("%:.")'
   echohl WarningMsg | echo "Successful in get current file path." | echohl None
   normal `y
 endfunction
