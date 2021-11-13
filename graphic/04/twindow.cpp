@@ -216,7 +216,7 @@ bool LightCube::init() {
     OpenGLInstance->glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cubeIndices.size() * sizeof(GLuint), &_cubeIndices[0], GL_STATIC_DRAW);
 
     // 设置点光源的位置
-    setPos(glm::vec3(5.0f, 3.0f, 2.0f));
+    setPos(glm::vec3(1.2f, 1.0f, 2.0f));
 
     // 设置点光源的能量
     setColor(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -365,6 +365,7 @@ void TWindow::paintGL() {
         cubeShader.setMat4("model", model);
         cubeShader.setVec3("lightColor", lightCube.getColor());
         cubeShader.setVec3("lightPos", lightCube.getPos());
+        cubeShader.setVec3("viewPos", camera.getPosition());
 
         cube.draw();
     }
