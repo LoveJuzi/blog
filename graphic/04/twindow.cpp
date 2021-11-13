@@ -3,73 +3,76 @@
 #include <iostream>
 #include <vector>
 
-#include "utils/utDefer.h"
+#include "utils/Camera.h"
 #include "utils/OpenGLSingleton.h"
+#include "utils/Shader.h"
+#include "utils/utDefer.h"
+
 
 static std::vector<GLfloat> cubeVertices = {
-     // position         // color
-     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 前  0
-    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 前  1
-    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 前  2
-     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 前  3
+     // position         // color            // normal
+     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f,  1.0f,  // 前  0
+    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f,  1.0f,  // 前  1
+    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f,  1.0f,  // 前  2
+     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f,  1.0f,  // 前  3
 
-     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 后  4
-     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 后  5
-    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 后  6
-    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 后  7
+     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f, -1.0f,  // 后  4
+     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f, -1.0f,  // 后  5
+    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f, -1.0f,  // 后  6
+    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  0.0f, -1.0f,  // 后  7
 
-    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 左  8
-    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 左  9
-    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 左  10
-    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 左  11
+    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f, -1.0f,  0.0f,  0.0f,  // 左  8
+    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f, -1.0f,  0.0f,  0.0f,  // 左  9
+    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f, -1.0f,  0.0f,  0.0f,  // 左  10
+    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f, -1.0f,  0.0f,  0.0f,  // 左  11
 
-     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 右  12
-     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 右  13
-     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 右  14
-     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 右  15
+     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  1.0f,  0.0f,  0.0f,  // 右  12
+     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  1.0f,  0.0f,  0.0f,  // 右  13
+     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  1.0f,  0.0f,  0.0f,  // 右  14
+     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  1.0f,  0.0f,  0.0f,  // 右  15
 
-     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 上  16
-     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 上  17
-    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 上  18
-    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 上  19
+     0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  1.0f,  0.0f,  // 上  16
+     0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  1.0f,  0.0f,  // 上  17
+    -0.5f,  0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  1.0f,  0.0f,  // 上  18
+    -0.5f,  0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f,  1.0f,  0.0f,  // 上  19
 
-     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 下  20
-    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  // 下  21
-    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 下  22
-     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  // 下  23
+     0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f, -1.0f,  0.0f,  // 下  20
+    -0.5f, -0.5f,  0.5f, 1.0f, 0.5f, 0.31f,  0.0f, -1.0f,  0.0f,  // 下  21
+    -0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f, -1.0f,  0.0f,  // 下  22
+     0.5f, -0.5f, -0.5f, 1.0f, 0.5f, 0.31f,  0.0f, -1.0f,  0.0f,  // 下  23
 };
 
 static std::vector<GLfloat> lightCubeVertices = {
-     // position         // color
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 前  0
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 前  1
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 前  2
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 前  3
+     // position         
+     0.5f,  0.5f,  0.5f,  // 前  0
+    -0.5f,  0.5f,  0.5f,  // 前  1
+    -0.5f, -0.5f,  0.5f,  // 前  2
+     0.5f, -0.5f,  0.5f,  // 前  3
 
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 后  4
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 后  5
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 后  6
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 后  7
+     0.5f,  0.5f, -0.5f,  // 后  4
+     0.5f, -0.5f, -0.5f,  // 后  5
+    -0.5f, -0.5f, -0.5f,  // 后  6
+    -0.5f,  0.5f, -0.5f,  // 后  7
 
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 左  8
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 左  9
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 左  10
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 左  11
+    -0.5f,  0.5f,  0.5f,  // 左  8
+    -0.5f,  0.5f, -0.5f,  // 左  9
+    -0.5f, -0.5f, -0.5f,  // 左  10
+    -0.5f, -0.5f,  0.5f,  // 左  11
 
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 右  12
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 右  13
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 右  14
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 右  15
+     0.5f,  0.5f,  0.5f,  // 右  12
+     0.5f, -0.5f,  0.5f,  // 右  13
+     0.5f, -0.5f, -0.5f,  // 右  14
+     0.5f,  0.5f, -0.5f,  // 右  15
 
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 上  16
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 上  17
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 上  18
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 上  19
+     0.5f,  0.5f,  0.5f,  // 上  16
+     0.5f,  0.5f, -0.5f,  // 上  17
+    -0.5f,  0.5f, -0.5f,  // 上  18
+    -0.5f,  0.5f,  0.5f,  // 上  19
 
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 下  20
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f,  // 下  21
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 下  22
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f,  // 下  23
+     0.5f, -0.5f,  0.5f,  // 下  20
+    -0.5f, -0.5f,  0.5f,  // 下  21
+    -0.5f, -0.5f, -0.5f,  // 下  22
+     0.5f, -0.5f, -0.5f,  // 下  23
 };
 
 static std::vector<GLuint> cubeIndices = {
@@ -99,12 +102,12 @@ class Cube {
 public:
     Cube(const std::vector<GLfloat>& cubeVertices, const std::vector<GLuint>& cubeIndices)
         : _VAO(0), _cubeVertices(cubeVertices), _cubeIndices(cubeIndices) {}
-    ~Cube() {}
-    bool init();
+    virtual ~Cube() {}
+    virtual bool init();
     bool draw();
     GLuint getVAO() const { return _VAO; }
     
-private:
+protected:
     GLuint _VAO;             // VAO 对象
     GLuint _VBO;             // VBO 对象
     GLuint _EBO;             // EBO 对象
@@ -113,11 +116,32 @@ private:
     const std::vector<GLuint>  _cubeIndices;
 };
 
+class LightCube : public Cube {
+public:
+    LightCube(const std::vector<GLfloat>& cubeVertices, const std::vector<GLuint>& cubeIndices)
+        : Cube(cubeVertices, cubeIndices) {}
+
+    ~LightCube() override {}
+
+    bool init () override;
+
+    void setPos(const glm::vec3& pos) { _pos = pos; }
+    void setColor(const glm::vec3& color) { _color = color; }
+
+    const glm::vec3& getPos() const { return _pos; }
+    const glm::vec3& getColor() const { return _color; }
+
+
+private:
+    glm::vec3 _pos;
+    glm::vec3 _color;
+};
+
 static Shader cubeShader;        // 着色器
 static Cube   cube(cubeVertices, cubeIndices);
 
-static Shader lightCubeShader;
-static Cube   lightCube(lightCubeVertices, cubeIndices);
+static Shader    lightCubeShader;
+static LightCube lightCube(lightCubeVertices, cubeIndices);
 
 bool Cube::init() {
     // create VAO
@@ -137,11 +161,14 @@ bool Cube::init() {
     // VAO buffer data
     OpenGLInstance->glBufferData(GL_ARRAY_BUFFER, _cubeVertices.size() * sizeof(GLfloat), &_cubeVertices[0], GL_STATIC_DRAW);
     // position attribute
-    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)0);
     OpenGLInstance->glEnableVertexAttribArray(0);
     // color attribute
-    OpenGLInstance->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    OpenGLInstance->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     OpenGLInstance->glEnableVertexAttribArray(1);
+    // normal attribute
+    OpenGLInstance->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    OpenGLInstance->glEnableVertexAttribArray(2);
 
     // bind EBO
     OpenGLInstance->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
@@ -158,6 +185,41 @@ bool Cube::draw() {
 
     // release VAO
     OpenGLInstance->glBindVertexArray(0);
+
+    return true;
+}
+
+bool LightCube::init() {
+    // create VAO
+    OpenGLInstance->glGenVertexArrays(1, &_VAO);
+
+    // create VBO
+    OpenGLInstance->glGenBuffers(1, &_VBO);
+
+    // create EBO
+    OpenGLInstance->glGenBuffers(1, &_EBO);
+
+    // bind VAO
+    OpenGLInstance->glBindVertexArray(_VAO);
+
+    // bind VBO
+    OpenGLInstance->glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+    // VAO buffer data
+    OpenGLInstance->glBufferData(GL_ARRAY_BUFFER, _cubeVertices.size() * sizeof(GLfloat), &_cubeVertices[0], GL_STATIC_DRAW);
+    // position attribute
+    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    OpenGLInstance->glEnableVertexAttribArray(0);
+
+    // bind EBO
+    OpenGLInstance->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
+    // EBO buffer data
+    OpenGLInstance->glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cubeIndices.size() * sizeof(GLuint), &_cubeIndices[0], GL_STATIC_DRAW);
+
+    // 设置点光源的位置
+    setPos(glm::vec3(5.0f, 3.0f, 2.0f));
+
+    // 设置点光源的能量
+    setColor(glm::vec3(1.0f, 1.0f, 1.0f));
 
     return true;
 }
@@ -201,7 +263,7 @@ void TWindow::initializeGL() {
     cube.init();
 
     // 5. init light cube shader
-    if (!lightCubeShader.init("simpleVertexShader.glsl", "simpleFragmentShader.glsl")) {
+    if (!lightCubeShader.init("light_cube_vs.glsl", "light_cube_fs.glsl")) {
         close();
         return;
     }
@@ -220,49 +282,6 @@ void TWindow::resizeGL(int w, int h) {
     initCursor = true;
 
     update();
-}
-
-void TWindow::paintGL() {
-
-
-    // clear background
-    OpenGLInstance->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    OpenGLInstance->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    {
-        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
-        glm::mat4 view = camera.getViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-        cubeShader.use();
-        cubeShader.setMat4("projection", projection);
-        cubeShader.setMat4("view", view);
-        cubeShader.setMat4("model", model);
-        cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-
-        cube.draw();
-    }
-
-    {
-        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
-        glm::mat4 view = camera.getViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(5.0f, 3.0f, 2.0f));
-        model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
-
-        lightCubeShader.use(); 
-        cubeShader.setMat4("projection", projection); 
-        cubeShader.setMat4("view", view);
-        cubeShader.setMat4("model", model);
-        cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
-
-        lightCube.draw();
-    }
-
-
-    // release VAO
-    OpenGLInstance->glBindVertexArray(0);
 }
 
 void TWindow::keyPressEvent(QKeyEvent* e) {
@@ -310,3 +329,47 @@ void TWindow::wheelEvent(QWheelEvent* e) {
     camera.processMouseScroll(e->delta() / 100.0f);
     update();
 }
+
+void TWindow::paintGL() {
+    // clear background
+    OpenGLInstance->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    OpenGLInstance->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // draw light
+    {
+        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
+        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, lightCube.getPos());
+        model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
+
+        lightCubeShader.use(); 
+        lightCubeShader.setMat4("projection", projection); 
+        lightCubeShader.setMat4("view", view);
+        lightCubeShader.setMat4("model", model);
+        lightCubeShader.setVec3("lightColor", lightCube.getColor());
+
+        lightCube.draw();
+    }
+
+    // draw cube
+    {
+        glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
+        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        cubeShader.use();
+        cubeShader.setMat4("projection", projection);
+        cubeShader.setMat4("view", view);
+        cubeShader.setMat4("model", model);
+        cubeShader.setVec3("lightColor", lightCube.getColor());
+        cubeShader.setVec3("lightPos", lightCube.getPos());
+
+        cube.draw();
+    }
+
+    // release VAO
+    OpenGLInstance->glBindVertexArray(0);
+}
+

@@ -37,7 +37,7 @@ set showmatch
 
 set hlsearch
 
-set incsearch
+" set incsearch
 
 set ignorecase
 
