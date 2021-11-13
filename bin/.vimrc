@@ -75,7 +75,9 @@ set expandtab
 set guioptions-=m
 set guioptions-=T
 
-colorscheme peachpuff
+if has('gui_running')
+  colorscheme peachpuff
+endif
 
 let g:netrw_banner=0
 
