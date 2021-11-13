@@ -125,16 +125,22 @@ public:
 
     bool init () override;
 
-    void setPos(const glm::vec3& pos) { _pos = pos; }
-    void setColor(const glm::vec3& color) { _color = color; }
+    void setPosition(const glm::vec3& v) { _position = v; }
+    void setAmbient(const glm::vec3& v) { _ambient = v; }
+    void setDiffuse(const glm::vec3& v) { _diffuse = v; }
+    void setSpecular(const glm::vec3& v) { _specular = v; }
 
-    const glm::vec3& getPos() const { return _pos; }
-    const glm::vec3& getColor() const { return _color; }
+    const glm::vec3& getPosition() const { return _position; }
+    const glm::vec3& getAmbient() const { return _ambient; }
+    const glm::vec3& getDiffuse() const { return _diffuse; }
+    const glm::vec3& getSpecular() const { return _specular; }
 
 
 private:
-    glm::vec3 _pos;
-    glm::vec3 _color;
+    glm::vec3 _position;
+    glm::vec3 _ambient;
+    glm::vec3 _diffuse;
+    glm::vec3 _specular;
 };
 
 static Shader cubeShader;        // 着色器
@@ -216,10 +222,16 @@ bool LightCube::init() {
     OpenGLInstance->glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cubeIndices.size() * sizeof(GLuint), &_cubeIndices[0], GL_STATIC_DRAW);
 
     // 设置点光源的位置
-    setPos(glm::vec3(1.2f, 1.0f, 2.0f));
+    setPosition(glm::vec3(1.2f, 1.0f, 2.0f));
 
-    // 设置点光源的能量
-    setColor(glm::vec3(1.0f, 1.0f, 1.0f));
+    // 设置点光源的ambient
+    setAmbient(glm::vec3(0.2f, 0.2f, 0.2f));
+
+    // 设置点光源的diffuse
+    setDiffuse(glm::vec3(0.5f, 0.5f, 0.5f));
+
+    // 设置点光源的specular
+    setSpecular(glm::vec3(1.0f, 1.0f, 1.0f));
 
     return true;
 }
@@ -340,14 +352,14 @@ void TWindow::paintGL() {
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, lightCube.getPos());
+        model = glm::translate(model, lightCube.getPosition());
         model = glm::scale(model,glm::vec3(0.3f, 0.3f, 0.3f));
 
         lightCubeShader.use(); 
         lightCubeShader.setMat4("projection", projection); 
         lightCubeShader.setMat4("view", view);
         lightCubeShader.setMat4("model", model);
-        lightCubeShader.setVec3("lightColor", lightCube.getColor());
+        lightCubeShader.setVec3("lightColor", lightCube.getSpecular());
 
         lightCube.draw();
     }
@@ -363,9 +375,11 @@ void TWindow::paintGL() {
         cubeShader.setMat4("projection", projection);
         cubeShader.setMat4("view", view);
         cubeShader.setMat4("model", model);
-        cubeShader.setVec3("lightColor", lightCube.getColor());
-        cubeShader.setVec3("lightPos", lightCube.getPos());
         cubeShader.setVec3("viewPos", camera.getPosition());
+        cubeShader.setVec3("light.position", lightCube.getPosition());
+        cubeShader.setVec3("light.ambient", lightCube.getAmbient());
+        cubeShader.setVec3("light.diffuse", lightCube.getDiffuse());
+        cubeShader.setVec3("light.specular", lightCube.getSpecular());
         cubeShader.setVec3("material.ambient",  1.0f, 0.5f, 0.31f);
         cubeShader.setVec3("material.diffuse",  1.0f, 0.5f, 0.31f);
         cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
