@@ -5,7 +5,6 @@ struct Material {
     float     shininess;
 };
 uniform Material material;
-uniform sampler2D texture2;
 
 struct Light {
     vec3 position;
@@ -41,8 +40,5 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = spec * light.specular * material.specular;
 
-    // FragColor = vec4(ambient + diffuse + specular, 1.0f);
-    // FragColor = texture2D(material.diffuse, texCoords);
-    // FragColor = mix(texture(texture2, texCoords), texture(material.diffuse, texCoords), 0.2);
-    FragColor = texture(material.diffuse, texCoords);
+    FragColor = vec4(ambient + diffuse + specular, 1.0f);
 }

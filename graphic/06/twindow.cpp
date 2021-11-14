@@ -2,15 +2,12 @@
 
 #include <iostream>
 #include <vector>
-#include <QImage>
 
 #include "utils/Camera.h"
 #include "utils/OpenGLSingleton.h"
 #include "utils/Shader.h"
 #include "utils/utDefer.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "utils/stb_image.h"
 
 static std::vector<GLfloat> cubeVertices = {
      // position         // color            // normal            // texture coords
@@ -46,11 +43,6 @@ static std::vector<GLfloat> cubeVertices = {
 };
 
 static std::vector<GLfloat> lightCubeVertices = {
-        // positions          // texture coords
-//         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
-//         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
-//        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
-//        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left  
      // position          // texture coords
      0.5f,  0.5f,  0.5f,  1.0f, 1.0f,        // 前  0
     -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,        // 前  1
@@ -84,8 +76,6 @@ static std::vector<GLfloat> lightCubeVertices = {
 };
 
 static std::vector<GLuint> cubeIndices = {
-//        0, 1, 3, // first triangle
-//        1, 2, 3  // second triangle
      0,  1,  2,
      2,  3,  0,
 
@@ -108,18 +98,25 @@ static std::vector<GLuint> cubeIndices = {
 // texture 负责创建一个纹理
 class TextureLoad {
 public:
-	static bool loadImage(unsigned char* & data, int& width, int& height, int& nrChannels, const std::string& imageFile);
-
-public:
     TextureLoad(const std::string& picName);
-    ~TextureLoad() {}
+    virtual ~TextureLoad() {}
 
     bool init();
     GLuint getId() const { return _id; }
+	bool loadImage(unsigned char* & data, int& width, int& height, int& nrChannels, const std::string& imageFile);
 
-private:
+    virtual GLint format() { return GL_RGB; }
+
+protected:
     GLuint       _id;
     std::string _picName;
+};
+
+class TextureLoadPng : public TextureLoad {
+public:
+    TextureLoadPng(const std::string& picName) : TextureLoad(picName) {}
+    ~TextureLoadPng() override {}
+    GLint format() override { return GL_RGBA; }
 };
 
 TextureLoad::TextureLoad(const std::string& picName) : _id(0), _picName(picName) {
@@ -137,7 +134,7 @@ bool TextureLoad::init() {
     int w, h, chs;
     if (!loadImage(data, w, h, chs, _picName)) { return false; }
     utDefer(stbi_image_free(data));
-    OpenGLInstance->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    OpenGLInstance->glTexImage2D(GL_TEXTURE_2D, 0, format(), w, h, 0, format(), GL_UNSIGNED_BYTE, data);
     OpenGLInstance->glGenerateMipmap(GL_TEXTURE_2D);
 
     return true;
@@ -201,9 +198,7 @@ private:
     glm::vec3 _specular;
 };
 
-static TextureLoad containerTex("wall.jpg");   // 纹理
-// static TextureLoad containerTex("container.png");   // 纹理
-static TextureLoad containerTex2("awesomeface.png");   // 纹理
+static TextureLoadPng containerTex("container.png");   // 纹理
 static Shader cubeShader;        // 着色器
 static Cube   cube(cubeVertices, cubeIndices);
 
@@ -399,7 +394,6 @@ void TWindow::initializeGL() {
     cube.init();
 
     // 5. init light cube shader
-    // if (!lightCubeShader.init("square.vs.glsl", "square.fs.glsl")) {
     if (!lightCubeShader.init("light_cube_vs.glsl", "light_cube_fs.glsl")) {
         close();
         return;
@@ -413,16 +407,6 @@ void TWindow::initializeGL() {
         close();
         return;
     }
-    stbi_set_flip_vertically_on_load(true);
-    if (!containerTex2.init()) {
-        close();
-        return;
-    }
-
-    //QImage image;
-    //image.load("wall.jpg");
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, image.bits());
-    //OpenGLInstance->glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void TWindow::paintGL() {
@@ -470,13 +454,10 @@ void TWindow::paintGL() {
         cubeShader.setInt("material.diffuse", 1);
         cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         cubeShader.setFloat("material.shininess", 32.0f);
-        cubeShader.setInt("texture2", 2);
 
         // bind diffuse map
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, containerTex.getId());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, containerTex2.getId());
+        glBindTexture(GL_TEXTURE_2D, containerTex.getId());
 
         cube.draw();
     }
