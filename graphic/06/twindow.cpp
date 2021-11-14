@@ -2,12 +2,15 @@
 
 #include <iostream>
 #include <vector>
+#include <QImage>
 
 #include "utils/Camera.h"
 #include "utils/OpenGLSingleton.h"
 #include "utils/Shader.h"
 #include "utils/utDefer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 static std::vector<GLfloat> cubeVertices = {
      // position         // color            // normal            // texture coords
@@ -43,39 +46,46 @@ static std::vector<GLfloat> cubeVertices = {
 };
 
 static std::vector<GLfloat> lightCubeVertices = {
-     // position         
-     0.5f,  0.5f,  0.5f,  // 前  0
-    -0.5f,  0.5f,  0.5f,  // 前  1
-    -0.5f, -0.5f,  0.5f,  // 前  2
-     0.5f, -0.5f,  0.5f,  // 前  3
-
-    -0.5f,  0.5f, -0.5f,  // 后  4
-     0.5f,  0.5f, -0.5f,  // 后  5
-     0.5f, -0.5f, -0.5f,  // 后  6
-    -0.5f, -0.5f, -0.5f,  // 后  7
-
-    -0.5f,  0.5f,  0.5f,  // 左  8
-    -0.5f,  0.5f, -0.5f,  // 左  9
-    -0.5f, -0.5f, -0.5f,  // 左  10
-    -0.5f, -0.5f,  0.5f,  // 左  11
-
-     0.5f,  0.5f, -0.5f,  // 右  12
-     0.5f,  0.5f,  0.5f,  // 右  13
-     0.5f, -0.5f,  0.5f,  // 右  14
-     0.5f, -0.5f, -0.5f,  // 右  15
-
-     0.5f,  0.5f, -0.5f,  // 上  16
-    -0.5f,  0.5f, -0.5f,  // 上  17
-    -0.5f,  0.5f,  0.5f,  // 上  18
-     0.5f,  0.5f,  0.5f,  // 上  19
-
-    -0.5f, -0.5f, -0.5f,  // 下  20
-     0.5f, -0.5f, -0.5f,  // 下  21
-     0.5f, -0.5f,  0.5f,  // 下  22
-    -0.5f, -0.5f,  0.5f,  // 下  23
+        // positions          // texture coords
+//         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+//         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+//        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+//        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left  
+     // position          // texture coords
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,        // 前  0
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,        // 前  1
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,        // 前  2
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,        // 前  3
+                                                     
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,        // 后  4
+     0.5f,  0.5f, -0.5f,  0.0f, 1.0f,        // 后  5
+     0.5f, -0.5f, -0.5f,  0.0f, 0.0f,        // 后  6
+    -0.5f, -0.5f, -0.5f,  1.0f, 0.0f,        // 后  7
+                                                       
+    -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,        // 左  8
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,        // 左  9
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,        // 左  10
+    -0.5f, -0.5f,  0.5f,  1.0f, 0.0f,        // 左  11
+                                                       
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,        // 右  12
+     0.5f,  0.5f,  0.5f,  0.0f, 1.0f,        // 右  13
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,        // 右  14
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,        // 右  15
+                                                       
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,        // 上  16
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,        // 上  17
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,        // 上  18
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,        // 上  19
+                                                       
+    -0.5f, -0.5f, -0.5f,  1.0f, 1.0f,        // 下  20
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,        // 下  21
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,        // 下  22
+    -0.5f, -0.5f,  0.5f,  1.0f, 0.0f,        // 下  23
 };
 
 static std::vector<GLuint> cubeIndices = {
+//        0, 1, 3, // first triangle
+//        1, 2, 3  // second triangle
      0,  1,  2,
      2,  3,  0,
 
@@ -94,6 +104,54 @@ static std::vector<GLuint> cubeIndices = {
     20, 21, 22,
     22, 23, 20,
 };
+
+// texture 负责创建一个纹理
+class TextureLoad {
+public:
+	static bool loadImage(unsigned char* & data, int& width, int& height, int& nrChannels, const std::string& imageFile);
+
+public:
+    TextureLoad(const std::string& picName);
+    ~TextureLoad() {}
+
+    bool init();
+    GLuint getId() const { return _id; }
+
+private:
+    GLuint       _id;
+    std::string _picName;
+};
+
+TextureLoad::TextureLoad(const std::string& picName) : _id(0), _picName(picName) {
+}
+
+bool TextureLoad::init() {
+    OpenGLInstance->glGenTextures(1, &_id);
+    OpenGLInstance->glBindTexture(GL_TEXTURE_2D, _id);
+    OpenGLInstance->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    OpenGLInstance->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    OpenGLInstance->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    OpenGLInstance->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    unsigned char* data;
+    int w, h, chs;
+    if (!loadImage(data, w, h, chs, _picName)) { return false; }
+    utDefer(stbi_image_free(data));
+    OpenGLInstance->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    OpenGLInstance->glGenerateMipmap(GL_TEXTURE_2D);
+
+    return true;
+}
+
+bool TextureLoad::loadImage(unsigned char* & data, int& width, int& height, int& nrChannels, const std::string& imageFile) {
+    data = stbi_load(imageFile.c_str(), &width, &height, &nrChannels, 0);
+    if (data == NULL) {
+        std::cerr << "Failed to load texture" << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 // cube 负责生成一个立方体对象
 // 主要的作用就是提供数据
@@ -143,6 +201,9 @@ private:
     glm::vec3 _specular;
 };
 
+static TextureLoad containerTex("wall.jpg");   // 纹理
+// static TextureLoad containerTex("container.png");   // 纹理
+static TextureLoad containerTex2("awesomeface.png");   // 纹理
 static Shader cubeShader;        // 着色器
 static Cube   cube(cubeVertices, cubeIndices);
 
@@ -167,14 +228,17 @@ bool Cube::init() {
     // VAO buffer data
     OpenGLInstance->glBufferData(GL_ARRAY_BUFFER, _cubeVertices.size() * sizeof(GLfloat), &_cubeVertices[0], GL_STATIC_DRAW);
     // position attribute
-    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)0);
+    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)0);
     OpenGLInstance->glEnableVertexAttribArray(0);
     // color attribute
-    OpenGLInstance->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    OpenGLInstance->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
     OpenGLInstance->glEnableVertexAttribArray(1);
     // normal attribute
-    OpenGLInstance->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+    OpenGLInstance->glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
     OpenGLInstance->glEnableVertexAttribArray(2);
+    // texture coords attribute
+    OpenGLInstance->glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(GLfloat), (GLvoid*)(9 * sizeof(GLfloat)));
+    OpenGLInstance->glEnableVertexAttribArray(3);
 
     // bind EBO
     OpenGLInstance->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
@@ -213,8 +277,10 @@ bool LightCube::init() {
     // VAO buffer data
     OpenGLInstance->glBufferData(GL_ARRAY_BUFFER, _cubeVertices.size() * sizeof(GLfloat), &_cubeVertices[0], GL_STATIC_DRAW);
     // position attribute
-    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+    OpenGLInstance->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
     OpenGLInstance->glEnableVertexAttribArray(0);
+    OpenGLInstance->glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+    OpenGLInstance->glEnableVertexAttribArray(1);
 
     // bind EBO
     OpenGLInstance->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
@@ -237,51 +303,13 @@ bool LightCube::init() {
 }
 
 TWindow::TWindow()
-    : camera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90),
+    : camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90),
     deltaTime(0.1f), initCursor(false)
 {
     setCursor(QCursor(Qt::BlankCursor));
 }
 
 TWindow::~TWindow() {
-}
-
-void TWindow::initializeGL() {
-    OpenGLInstanceInit(QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>());
-
-    if (OpenGLInstance == NULL) {
-        std::cerr << "OpenGL init error!" << std::endl;
-        close();
-        return ;
-    }
-
-    // 1. init window size
-    resize(QSize(800, 800));
-    
-    // 2. configure global opengl state
-    // -----------------------------
-    OpenGLInstance->glEnable(GL_DEPTH_TEST);
-    OpenGLInstance->glEnable(GL_CULL_FACE);
-    // 线框模式
-    // OpenGLInstance->glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    // 3. init cubeShader
-    if (!cubeShader.init("simpleVertexShader.glsl", "simpleFragmentShader.glsl")) {
-        close();
-        return;
-    }
-
-    // 4. cube init
-    cube.init();
-
-    // 5. init light cube shader
-    if (!lightCubeShader.init("light_cube_vs.glsl", "light_cube_fs.glsl")) {
-        close();
-        return;
-    }
-
-    // 6. light cube init
-    lightCube.init();
 }
 
 void TWindow::resizeGL(int w, int h) {
@@ -342,6 +370,61 @@ void TWindow::wheelEvent(QWheelEvent* e) {
     update();
 }
 
+void TWindow::initializeGL() {
+    OpenGLInstanceInit(QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>());
+
+    if (OpenGLInstance == NULL) {
+        std::cerr << "OpenGL init error!" << std::endl;
+        close();
+        return ;
+    }
+
+    // 1. init window size
+    resize(QSize(800, 800));
+    
+    // 2. configure global opengl state
+    // -----------------------------
+    OpenGLInstance->glEnable(GL_DEPTH_TEST);
+    OpenGLInstance->glEnable(GL_CULL_FACE);
+    // 线框模式
+    // OpenGLInstance->glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    // 3. init cubeShader
+    if (!cubeShader.init("simpleVertexShader.glsl", "simpleFragmentShader.glsl")) {
+        close();
+        return;
+    }
+
+    // 4. cube init
+    cube.init();
+
+    // 5. init light cube shader
+    // if (!lightCubeShader.init("square.vs.glsl", "square.fs.glsl")) {
+    if (!lightCubeShader.init("light_cube_vs.glsl", "light_cube_fs.glsl")) {
+        close();
+        return;
+    }
+
+    // 6. light cube init
+    lightCube.init();
+
+    // 7. 初始化纹理
+    if (!containerTex.init()) {
+        close();
+        return;
+    }
+    stbi_set_flip_vertically_on_load(true);
+    if (!containerTex2.init()) {
+        close();
+        return;
+    }
+
+    //QImage image;
+    //image.load("wall.jpg");
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width(), image.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, image.bits());
+    //OpenGLInstance->glGenerateMipmap(GL_TEXTURE_2D);
+}
+
 void TWindow::paintGL() {
     // clear background
     OpenGLInstance->glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -360,11 +443,15 @@ void TWindow::paintGL() {
         lightCubeShader.setMat4("view", view);
         lightCubeShader.setMat4("model", model);
         lightCubeShader.setVec3("lightColor", lightCube.getSpecular());
+        lightCubeShader.setInt("texture1", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, containerTex.getId());
 
         lightCube.draw();
     }
 
-    // draw cube
+    // // draw cube
     {
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
@@ -380,10 +467,16 @@ void TWindow::paintGL() {
         cubeShader.setVec3("light.ambient", lightCube.getAmbient());
         cubeShader.setVec3("light.diffuse", lightCube.getDiffuse());
         cubeShader.setVec3("light.specular", lightCube.getSpecular());
-        cubeShader.setVec3("material.ambient",  1.0f, 0.5f, 0.31f);
-        cubeShader.setVec3("material.diffuse",  1.0f, 0.5f, 0.31f);
+        cubeShader.setInt("material.diffuse", 1);
         cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
         cubeShader.setFloat("material.shininess", 32.0f);
+        cubeShader.setInt("texture2", 2);
+
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, containerTex.getId());
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, containerTex2.getId());
 
         cube.draw();
     }
@@ -391,4 +484,5 @@ void TWindow::paintGL() {
     // release VAO
     OpenGLInstance->glBindVertexArray(0);
 }
+
 

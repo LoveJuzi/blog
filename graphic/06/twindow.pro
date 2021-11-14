@@ -23,7 +23,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += $$files(*.ui.h, true) 
 SOURCES += $$files(*.cpp, true)
 
-DISTFILES += $$files(*.glsl, true)
+DISTFILES += \
+    $$files(*.glsl, false) \
+    $$files(*.png, flase) \
+    $$files(*.jpg, flase) \
 
 copy_glsl.files = $$DISTFILES
 copy_glsl.path = $$OUT_PWD
