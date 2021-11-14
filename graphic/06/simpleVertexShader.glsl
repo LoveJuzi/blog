@@ -1,7 +1,7 @@
 #version 330 core
 struct Material {
     sampler2D diffuse;
-    vec3      specular;
+    sampler2D specular;
     float     shininess;
 };
 uniform Material material;
@@ -26,13 +26,13 @@ layout(location = 2) in  vec3 aNormal;
 layout(location = 3) in  vec2 aTexCoords;
                      out vec3 vColor;
                      out vec3 vNormal;
-                     out vec3 fragPos;
-                     out vec2 texCoords;
+                     out vec3 vFragPos;
+                     out vec2 vTexCoords;
 
 void main() { 
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     vColor = aColor;
     vNormal = mat3(transpose(inverse(model))) * aNormal;
-    fragPos = vec3(model * vec4(aPos, 1.0));
-    texCoords = aTexCoords;
+    vFragPos = vec3(model * vec4(aPos, 1.0));
+    vTexCoords = aTexCoords;
 };

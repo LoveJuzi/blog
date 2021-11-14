@@ -199,6 +199,7 @@ private:
 };
 
 static TextureLoadPng containerTex("container.png");   // 纹理
+static TextureLoadPng containerSpecularTex("container_specular.png");   // 纹理
 static Shader cubeShader;        // 着色器
 static Cube   cube(cubeVertices, cubeIndices);
 
@@ -407,6 +408,10 @@ void TWindow::initializeGL() {
         close();
         return;
     }
+    if (!containerSpecularTex.init()) {
+        close();
+        return;
+    }
 }
 
 void TWindow::paintGL() {
@@ -427,10 +432,6 @@ void TWindow::paintGL() {
         lightCubeShader.setMat4("view", view);
         lightCubeShader.setMat4("model", model);
         lightCubeShader.setVec3("lightColor", lightCube.getSpecular());
-        lightCubeShader.setInt("texture1", 0);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, containerTex.getId());
 
         lightCube.draw();
     }
@@ -440,7 +441,7 @@ void TWindow::paintGL() {
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
-        // model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
         cubeShader.use();
         cubeShader.setMat4("projection", projection);
@@ -451,13 +452,15 @@ void TWindow::paintGL() {
         cubeShader.setVec3("light.ambient", lightCube.getAmbient());
         cubeShader.setVec3("light.diffuse", lightCube.getDiffuse());
         cubeShader.setVec3("light.specular", lightCube.getSpecular());
-        cubeShader.setInt("material.diffuse", 1);
-        cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+        cubeShader.setInt("material.diffuse", 0);
+        cubeShader.setInt("material.specular", 1);
         cubeShader.setFloat("material.shininess", 32.0f);
 
         // bind diffuse map
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, containerTex.getId());
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, containerSpecularTex.getId());
 
         cube.draw();
     }
