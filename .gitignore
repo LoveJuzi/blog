@@ -3,5 +3,10 @@ tags
 .label_0_0
 .project_0_0
 
+.project
+.build
+.find
+.tmp
+
 *.o
 *.out
