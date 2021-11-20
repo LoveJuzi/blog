@@ -305,7 +305,7 @@ TWindow::TWindow()
     : camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90),
     deltaTime(0.1f), initCursor(false)
 {
-    setCursor(QCursor(Qt::BlankCursor));
+    // setCursor(QCursor(Qt::BlankCursor));
 }
 
 TWindow::~TWindow() {
@@ -316,9 +316,6 @@ void TWindow::resizeGL(int w, int h) {
 
     center.setX(w/2);
     center.setY(h/2);
-
-    QCursor::setPos(mapToGlobal(center));
-    initCursor = true;
 
     update();
 }
@@ -347,21 +344,16 @@ void TWindow::keyPressEvent(QKeyEvent* e) {
 }
 
 void TWindow::mouseMoveEvent(QMouseEvent *e) {
-    if (!initCursor) return;
+    // if (!initCursor) return;
 
-    GLint xoffset = e->pos().x() - center.x();
-    GLint yoffset = center.y() - e->pos().y();
-    std::cout << e->pos().x() << " ";
-    std::cout << e->pos().y() << " ";
-    std::cout << center.x() << " ";
-    std::cout << center.y() << " ";
-    std::cout << xoffset << " ";
-    std::cout << yoffset << " ";
-    std::cout << std::endl;
+    GLint xoffset = 0;
+    GLint yoffset = 0;
+    if (e->buttons() & Qt::LeftButton) {
+        xoffset = center.x() - e->pos().x();
+        yoffset = e->pos().y() - center.y();
+    }
 
     center = e->pos();
-
-    QCursor::setPos(mapToGlobal(center));
 
     if (xoffset == 0 && yoffset == 0) { return; }
     if (xoffset > 100 || yoffset > 100) { 

@@ -19,7 +19,7 @@ GLFW_LIB := "-lglfw" "-lGLEW" "-lGLU"
 GLFW_LIB += "-lGL" "-lXrandr" "-lX11"
 
 # config CXX
-CXX := g++ "-I." "-fPIC" "-lrt" "-lm" "-lpthread" 
+CXX := g++ -std=c++11 "-I." "-fPIC" "-lrt" "-lm" "-lpthread" 
 #CXX += -L"/usr/local/lib"
 #CXX += -L"/usr/lib64"
 #CXX += $(QT_INC)$(QT_LIB)  # include Qt library
