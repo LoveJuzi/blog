@@ -1,0 +1,19 @@
+[user]
+	name = LoveJuzi
+	email = mylovejuzi@icloud.com
+[color]
+	ui = true
+	status = auto
+	diff = auto
+	branch = auto
+	interactive = auto
+[alias]
+	lg = log --color --graph --decorate
+	ss = status -s
+	st = status
+	br = branch -l
+	cd = checkout
+	td = difftool --extcmd="~/bin/tkdiff" -y
+	dl = diff --name-only
+[gitreview]
+	username = LoveJuzi
