@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <QtOpenGL/QOpenGLVersionFunctionsFactory>
+
 #include "utils/utDefer.h"
 #include "utils/OpenGLSingleton.h"
 
@@ -35,7 +37,8 @@ TWindow::~TWindow() {
 }
 
 void TWindow::initializeGL() {
-    OpenGLInstanceInit(QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>());
+    // OpenGLInstanceInit(QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>());
+    OpenGLInstanceInit(QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(QOpenGLContext::currentContext()));
 
     if (OpenGLInstance == NULL) {
         std::cerr << "OpenGL init error!" << std::endl;

@@ -6,7 +6,7 @@ if (( $# >= 1 )); then
     name=$1
 fi
 
-  #"+ set path+=$QT_INC_DIR/**" \
+QT_INC_DIR='~/Qt/6.2.1/gcc_64/include'
 
 vim "+ cd $name" \
   "+ set tags+=tags;,./tags" \

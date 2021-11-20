@@ -1,7 +1,7 @@
 #ifndef OpenGLSingleton_H
 #define OpenGLSingleton_H
 
-#include <QOpenGLFunctions_3_3_Core>
+#include <QtOpenGL/QOpenGLFunctions_3_3_Core>
 
 #include "utils/Singleton.h"
 

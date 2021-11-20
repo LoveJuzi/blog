@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 
+#include <QOpenGLVersionFunctionsFactory>
+
 #include "utils/Camera.h"
 #include "utils/OpenGLSingleton.h"
 #include "utils/Shader.h"
@@ -346,8 +348,8 @@ void TWindow::keyPressEvent(QKeyEvent* e) {
 void TWindow::mouseMoveEvent(QMouseEvent *e) {
     if (!initCursor) return;
 
-    GLint xoffset = e->x() - center.x();
-    GLint yoffset = center.y() - e->y();
+    GLint xoffset = e->pos().x() - center.x();
+    GLint yoffset = center.y() - e->pos().y();
 
     QCursor::setPos(mapToGlobal(center));
 
@@ -362,12 +364,12 @@ void TWindow::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void TWindow::wheelEvent(QWheelEvent* e) {
-    camera.processMouseScroll(e->delta() / 100.0f);
+    camera.processMouseScroll(e->angleDelta().y() / 100.0f);
     update();
 }
 
 void TWindow::initializeGL() {
-    OpenGLInstanceInit(QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>());
+    OpenGLInstanceInit(QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(QOpenGLContext::currentContext()));
 
     if (OpenGLInstance == NULL) {
         std::cerr << "OpenGL init error!" << std::endl;
@@ -436,8 +438,9 @@ void TWindow::paintGL() {
         lightCube.draw();
     }
 
-    // // draw cube
+    // draw cube
     {
+
         glm::mat4 projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f, 0.1f, 100.0f);
         glm::mat4 view = camera.getViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);

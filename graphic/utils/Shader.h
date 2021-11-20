@@ -1,7 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <QOpenGLFunctions_3_3_Core>
+#include <QtOpenGL/QOpenGLFunctions_3_3_Core>
 
 #include "glm/glm.hpp"
 

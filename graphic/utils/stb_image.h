@@ -1,4 +1,5 @@
-#ifndef STB_IMAGE_H #define STB_IMAGE_H
+#ifndef STB_IMAGE_H
+#define STB_IMAGE_H
 
 /* stb_image - v2.26 - public domain image loader - http://nothings.org/stb
                                   no warranty implied; use at your own risk
@@ -4112,7 +4113,8 @@ stbi_inline static unsigned int stbi__zreceive(stbi__zbuf *z, int n)
 
 static int stbi__zhuffman_decode_slowpath(stbi__zbuf *a, stbi__zhuffman *z)
 {
-   int b,s,k;
+   unsigned long int b;
+   int s,k;
    // not resolved by fast table, so compute it the slow way
    // use jpeg approach, which requires MSbits at top
    k = stbi__bit_reverse(a->code_buffer, 16);
@@ -6783,7 +6785,8 @@ static void *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y,
       if (delays) {
          *delays = 0;
       }
-
+      STBI_NOTUSED(out_size);
+      STBI_NOTUSED(delays_size);
       do {
          u = stbi__gif_load_next(s, &g, comp, req_comp, two_back);
          if (u == (stbi_uc *) s) u = 0;  // end of animated gif marker

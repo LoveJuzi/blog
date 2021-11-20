@@ -1,8 +1,8 @@
 #ifndef TWINDOW_H
 #define TWINDOW_H
 
-#include <QOpenGLWindow>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QtOpenGL/QOpenGLWindow>
+#include <QtOpenGL/QOpenGLFunctions_3_3_Core>
 #include <QKeyEvent>
 
 #include "utils/Shader.h"

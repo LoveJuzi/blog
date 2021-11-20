@@ -1,7 +1,7 @@
 #ifndef TWINDOW_H
 #define TWINDOW_H
 
-#include <QOpenGLWindow>
+#include <QtOpenGL/QOpenGLWindow>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QKeyEvent>
 
