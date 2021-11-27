@@ -8,8 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "common/utDefer.h"
-#include "common/Shader.h"
+#include "utils/utDefer.h"
+#include "utils/Shader.h"
 #include "common/stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
