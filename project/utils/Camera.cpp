@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
+Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch, float ratio)
     : _front(glm::vec3(0.0f, 0.0f, -1.0f)), _movementSpeed(SPEED),
     _mouseSensitivity(SENSITIVITY), _zoom(ZOOM)
 {
@@ -8,11 +8,18 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     _worldUp = up;
     _yaw = yaw;
     _pitch = pitch;
+    _ratio = ratio;
     updateCameraVectors();
 }
 
 glm::mat4 Camera::getViewMatrix() {
     return glm::lookAt(_position, _position + _front, _up);
+}
+
+glm::mat4 Camera::getProjection() {
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(_zoom), _ratio, 0.1f, 100.0f);
+    return projection;
 }
 
 void Camera::updateCameraVectors() {
@@ -70,3 +77,8 @@ void Camera::processMouseScroll(float yoffset) {
         _zoom = 45.0f;
     }
 }
+
+void Camera::setRatio(float ratio) {
+    _ratio = ratio;
+}
+

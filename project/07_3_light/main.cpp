@@ -255,7 +255,7 @@ bool Cube::init() {
 bool Cube::destory() {
     if (_vertices) delete _vertices;
 
-    glDeleteBuffers(1, &VAO);
+    glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
 
     return true;
@@ -349,47 +349,41 @@ bool OpenGLWindow::init() {
 }
 
 bool OpenGLWindow::run() {
-    // 启用深度测试
-    glEnable(GL_DEPTH_TEST);
-    
+    // draw light
+    auto drawLight = [&]() {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, _lightCube.getLightPos());
+        model = glm::scale(model, _lightCube.getLightScale());
+
+        _lightCubeShader.use();
+        _lightCubeShader.setMat4("projection", _camera.getProjection());
+        _lightCubeShader.setMat4("view", _camera.getViewMatrix());
+        _lightCubeShader.setMat4("model", model);
+        _lightCubeShader.setVec3("lightColor", _lightCube.getLightColor());
+
+        _lightCube.draw();
+    };
+
+    // draw wooden box
+    auto drawWoodenBox = [&]() {
+        glm::mat4 model = glm::mat4(1.0f);
+
+        _lightingShader.use();
+        _lightingShader.setMat4("projection", _camera.getProjection());
+        _lightingShader.setMat4("view", _camera.getViewMatrix());
+        _lightingShader.setMat4("model", model);
+        _lightingShader.setVec3("objectColor", _woodenBox.getColor());
+        _lightingShader.setVec3("lightColor", _lightCube.getLightColor());
+
+        _woodenBox.draw();
+
+    };
+
     while (!glfwWindowShouldClose(_window)) {
         processInput(_window);
 
-        // 需要扩展下 camera
-        glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(_camera.getZoom()), 1.0f * _winWidth /
-                _winHeight, 0.1f, 100.0f);
-
-        // draw light
-        auto drawLight = [&]() {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, _lightCube.getLightPos());
-            model = glm::scale(model, _lightCube.getLightScale());
-
-            _lightCubeShader.use();
-            _lightCubeShader.setMat4("projection", projection);
-            _lightCubeShader.setMat4("view", _camera.getViewMatrix());
-            _lightCubeShader.setMat4("model", model);
-            _lightCubeShader.setVec3("lightColor", _lightCube.getLightColor());
-
-            _lightCube.draw();
-        };
-
-        // draw wooden box
-        auto drawWoodenBox = [&]() {
-            glm::mat4 model = glm::mat4(1.0f);
-
-            _lightingShader.use();
-            _lightingShader.setMat4("projection", projection);
-            _lightingShader.setMat4("view", _camera.getViewMatrix());
-            _lightingShader.setMat4("model", model);
-            _lightingShader.setVec3("objectColor", _woodenBox.getColor());
-            _lightingShader.setVec3("lightColor", _lightCube.getLightColor());
-
-            _woodenBox.draw();
-
-        };
-
+        // 启用深度测试
+        glEnable(GL_DEPTH_TEST);
         // clear window
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -466,8 +460,7 @@ bool OpenGLWindow::initGLEW() {
 
 void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
-    OpenGLWindowInstance.setWidth(width);
-    OpenGLWindowInstance.setHeight(height);
+    OpenGLWindowInstance.camera().setRatio(1.0 * width / height);
 }
 
 void OpenGLWindow::processInput(GLFWwindow* window) {
