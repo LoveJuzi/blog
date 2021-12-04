@@ -222,6 +222,10 @@ public:
     const glm::vec3& getDiffuse() const { return _diffuse; }
     const glm::vec3& getSpecular() const { return _specular; }
 
+    float getConstant() const { return _constant; }
+    float getLinear() const { return _linear; }
+    float getQuadratic() const { return _quadratic; }
+
 private:
     glm::vec3 _lightScale;
     glm::vec3 _lightPos;
@@ -231,6 +235,10 @@ private:
     glm::vec3 _ambient;
     glm::vec3 _diffuse;
     glm::vec3 _specular;
+
+    float _constant;
+    float _linear;
+    float _quadratic;
 };
 
 LightCube::LightCube()
@@ -240,6 +248,9 @@ LightCube::LightCube()
     , _ambient(0.2f, 0.2f, 0.2f)
     , _diffuse(0.5f, 0.5, 0.5f)
     , _specular(1.0f, 1.0f, 1.0f)
+    , _constant(1.0f)
+    , _linear(0.09f)
+    , _quadratic(0.032f)
 {
 }
 
@@ -433,13 +444,25 @@ bool OpenGLWindow::run() {
 
     // draw wooden box
     auto drawWoodenBox = [&]() {
+		static std::vector<glm::vec3> cubePositions = {
+			glm::vec3( 0.0f,  0.0f,  0.0f),
+			glm::vec3( 2.0f,  5.0f, -15.0f),
+			glm::vec3(-1.5f, -2.2f, -2.5f),
+			glm::vec3(-3.8f, -2.0f, -12.3f),
+			glm::vec3( 2.4f, -0.4f, -3.5f),
+			glm::vec3(-1.7f,  3.0f, -7.5f),
+			glm::vec3( 1.3f, -2.0f, -2.5f),
+			glm::vec3( 1.5f,  2.0f, -2.5f),
+			glm::vec3( 1.5f,  0.2f, -1.5f),
+			glm::vec3(-1.3f,  1.0f, -1.5f)
+		};
+
         glm::mat4 model = glm::mat4(1.0f);
 
         _lightingShader.use();
         _lightingShader.setMat4("projection", _camera.getProjection());
         _lightingShader.setMat4("view", _camera.getViewMatrix());
-        _lightingShader.setMat4("model", model);
-        _lightingShader.setVec3("lightPos", _lightCube.getLightPos());
+        // _lightingShader.setMat4("model", model);
         _lightingShader.setVec3("viewPos", _camera.getPosition());
         _lightingShader.setInt("material.diffuse", 0);
         _lightingShader.setInt("material.specular", 1);
@@ -447,13 +470,25 @@ bool OpenGLWindow::run() {
         _lightingShader.setVec3("light.ambient", _lightCube.getAmbient());
         _lightingShader.setVec3("light.diffuse", _lightCube.getDiffuse());
         _lightingShader.setVec3("light.specular", _lightCube.getSpecular());
+        _lightingShader.setVec3("light.position", _lightCube.getLightPos());
+        _lightingShader.setFloat("light.constant", _lightCube.getConstant());
+        _lightingShader.setFloat("light.linear", _lightCube.getLinear());
+        _lightingShader.setFloat("light.quadratic", _lightCube.getQuadratic());
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _container2Tex.getId());
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, _containerSpecular2Tex.getId());
 
-        _woodenBox.draw();
+        for (unsigned int i = 0; i < cubePositions.size(); ++i) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            _lightingShader.setMat4("model", model);
+
+            _woodenBox.draw();
+        }
 
     };
 
