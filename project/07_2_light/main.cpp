@@ -2,20 +2,17 @@
 #include <functional>
 #include <vector>
 
-#include <GL/glew.h>
-
 #include <GLFW/glfw3.h>
-
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "common/stb_image.h"
-
-#include "utils/utDefer.h"
-#include "utils/Shader.h"
 #include "utils/Camera.h"
+#include "utils/Shader.h"
 #include "utils/Singleton.h"
+#include "utils/stb_image.h"
+#include "utils/utDefer.h"
 
 class LoadImage {
 public:
