@@ -216,6 +216,9 @@ public:
 
     const glm::vec3& getLightScale() const { return _lightScale; }
     const glm::vec3& getLightPos() const { return _lightPos; }
+    const glm::vec3& getDircetion() const { return _direction; } 
+    float getCutOff() const { return _cutOff; }
+    float getOuterCutOff() const { return _outerCutOff; }
     const glm::vec3& getLightColor() const { return _lightColor; }
 
     const glm::vec3& getAmbient() const { return _ambient; }
@@ -225,6 +228,9 @@ public:
 private:
     glm::vec3 _lightScale;
     glm::vec3 _lightPos;
+    glm::vec3 _direction;
+    float     _cutOff;
+    float     _outerCutOff;
 
     glm::vec3 _lightColor;
 
@@ -235,6 +241,8 @@ private:
 
 LightCube::LightCube()
     : _lightPos(1.2f, 1.0f, 2.0f)
+    , _cutOff(glm::cos(glm::radians(12.5f)))
+    , _outerCutOff(glm::cos(glm::radians(17.5f)))
     , _lightScale(0.2f)
     , _lightColor(1.0f, 1.0f, 1.0f)
     , _ambient(0.2f, 0.2f, 0.2f)
@@ -446,7 +454,10 @@ bool OpenGLWindow::run() {
         _lightingShader.setVec3("light.ambient", _lightCube.getAmbient());
         _lightingShader.setVec3("light.diffuse", _lightCube.getDiffuse());
         _lightingShader.setVec3("light.specular", _lightCube.getSpecular());
-        _lightingShader.setVec3("light.position", _lightCube.getLightPos());
+        _lightingShader.setVec3("light.position", _camera.getPosition());
+        _lightingShader.setVec3("light.direction", _camera.getFront());
+        _lightingShader.setFloat("light.cutOff", _lightCube.getCutOff());
+        _lightingShader.setFloat("light.outerCutOff", _lightCube.getOuterCutOff());
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _container2Tex.getId());
@@ -467,7 +478,7 @@ bool OpenGLWindow::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw
-        drawLight();
+        // drawLight();
         drawWoodenBox();
 
         // swap buffer
