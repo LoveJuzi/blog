@@ -2,9 +2,7 @@
 
 ctagsl="ctags -R --c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v --fields=+liaS --extra=+q"
 
-INCPATH="./ \
-         /usr/include/GLFW/ \
+INCPATH="/usr/include/GLFW/ \
          /usr/include/GL/ \
-         /usr/local/include/glm/ \
          "
 echo $ctagsl $INCPATH | bash

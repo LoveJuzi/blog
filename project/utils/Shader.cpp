@@ -4,7 +4,7 @@
 
 #include "utDefer.h"
 
-Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
+bool Shader::init(const GLchar* vertexPath, const GLchar* fragmentPath) {
     // 1. 从文件路径中获取顶点/片段着色器
     std::string vertexCode;
     std::string fragmentCode;
@@ -37,6 +37,7 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
 
     } catch (std::ifstream::failure e) {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+        return false;
     }
 
     const char* vShaderCode = vertexCode.c_str();
@@ -60,6 +61,7 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
     if (!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        return false;
     }
 
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -71,6 +73,7 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
     if (!success) {
         glGetShaderInfoLog(fragment, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        return false;
     }
 
     _id = glCreateProgram();
@@ -82,7 +85,10 @@ Shader::Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
     if (!success) {
         glGetProgramInfoLog(_id, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 void Shader::use() {

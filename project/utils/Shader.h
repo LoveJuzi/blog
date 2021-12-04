@@ -12,8 +12,7 @@
 // Shader.cpp
 class Shader {
 public:
-    Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
-
+    bool init(const GLchar* vertexPath, const GLchar* fragmentPath);
     void use();
     unsigned int ID() const;
 
