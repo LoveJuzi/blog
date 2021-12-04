@@ -19,7 +19,7 @@ GLFW_LIB := "-lglfw" "-lGLEW" "-lGLU"
 GLFW_LIB += "-lGL" "-lXrandr" "-lX11"
 
 # config CXX
-CXX := g++ -std=c++11  -ggdb3
+CXX := g++ -std=c++11 -ggdb3
 CXX_FLAGS += "-I." "-fPIC" "-lrt" "-lm" "-lpthread" 
 CXX_FLAGS += $(GLFW_LIB) # include GLFW library
 
