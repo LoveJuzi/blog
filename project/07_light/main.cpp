@@ -1,5 +1,6 @@
 #include <iostream>
 #include <functional>
+#include <vector>
 
 #include <GL/glew.h>
 
@@ -14,6 +15,7 @@
 #include "utils/utDefer.h"
 #include "utils/Shader.h"
 #include "utils/Camera.h"
+#include "utils/Singleton.h"
 
 class LoadImage {
 public:
@@ -48,10 +50,106 @@ bool LoadImage::load(const std::string& imgfile) {
     return true;
 }
 
-// deal opengl window
-class OpenGLWindow {
+class ContainerTexture {
+public:
+    ContainerTexture() {}
+    ~ContainerTexture();
+
+    bool load(const std::string& picfile);
+    bool destory();
+    unsigned int getId() const { return _texid; }
+
 private:
-    static OpenGLWindow* windowInstance;
+    unsigned int _texid;
+};
+
+ContainerTexture::~ContainerTexture() {
+    destory();
+}
+
+bool ContainerTexture::load(const std::string& picfile) {
+    LoadImage image;
+    if (!image.load(picfile)) { return false; }
+
+    glGenTextures(1, &_texid);
+
+    glBindTexture(GL_TEXTURE_2D, _texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.getWidth(), image.getHeight(), 0,
+            GL_RGB, GL_UNSIGNED_BYTE, image.getData());
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    return true;
+}
+
+bool ContainerTexture::destory() {
+    glDeleteTextures(1, &_texid);
+    return true;
+}
+
+class SmileTexture {
+public:
+    SmileTexture() {}
+    ~SmileTexture();
+
+    bool load(const std::string& picfile);
+    bool destory();
+    GLuint getId() const { return _texid; }
+
+private:
+    unsigned int _texid;
+};
+
+SmileTexture::~SmileTexture() {
+    destory();
+}
+
+bool SmileTexture::load(const std::string& picfile) {
+    LoadImage image;
+    if (!image.load(picfile)) { return false; }
+
+    glGenTextures(1, &_texid);
+
+    glBindTexture(GL_TEXTURE_2D, _texid);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.getWidth(), image.getHeight(), 0,
+            GL_RGBA, GL_UNSIGNED_BYTE, image.getData());
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    return true;
+}
+
+bool SmileTexture::destory() {
+    glDeleteTextures(1, &_texid);
+    return true;
+}
+
+class Cube {
+public:
+    Cube();
+    ~Cube();
+
+    bool init();
+    bool destory();
+    bool draw();
+
+private:
+    std::vector<float>* _vertices;
+
+    unsigned int VAO;
+    unsigned int VBO;
+};
+
+
+// opengle singleton window
+class OpenGLWindow : public Singleton<OpenGLWindow> {
+private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
     static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -61,7 +159,12 @@ public:
     ~OpenGLWindow();
 
     bool init();
+    bool destory();
     bool run();
+
+    Camera& camera() { return _camera; }
+    void setWidth(int width) { _winWidth = width; }
+    void setHeight(int height) { _winHeight = height; }
 
 private:
     void processInput(GLFWwindow* window);
@@ -81,39 +184,29 @@ private:
     
     GLFWwindow* _window = NULL;
 
-    unsigned int texture1;
-    unsigned int texture2;
-    unsigned int VBO;
-	unsigned int EBO;
-    unsigned int VAO;
+    Camera _camera;
 
-    Camera camera;
+    float _deltaTime = 0.0f;
+    float _lastFrame = 0.0f;
+    Shader _ourShader;
 
-    glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
-
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
-    Shader ourShader;
-
-    int screenWidth = 800;
-    int screenHeight = 600;
+    Cube _cube;
+    ContainerTexture _containerTex;
+    SmileTexture _smileTex;
 };
 
-OpenGLWindow* OpenGLWindow::windowInstance = NULL;
+#define OpenGLWindowInstance (*(OpenGLWindow::getInstancePtr()))
 
 OpenGLWindow::OpenGLWindow()
-    : camera(glm::vec3(0.0f, 0.0f, 3.0f)),
-    cameraPos(glm::vec3(0.0f, 0.0f, 3.0f)), 
-    cameraFront(glm::vec3(0.0f, 0.0f, -1.0f)),
-    cameraUp(glm::vec3(0.0f, 1.0f, 0.0f)) {
+    : _camera(glm::vec3(0.0f, 0.0f, 3.0f)) {
 }
 
 OpenGLWindow::~OpenGLWindow() {
-    if (_isInit) {
-        glfwTerminate();
-    }
+}
+
+bool OpenGLWindow::destory() {
+    glfwTerminate();
+    return true;
 }
 
 bool OpenGLWindow::initGLFW() {
@@ -146,8 +239,6 @@ bool OpenGLWindow::createWindow() {
 
     glfwMakeContextCurrent(_window);
 
-    OpenGLWindow::windowInstance = this;
-
     glfwSetFramebufferSizeCallback(_window, &OpenGLWindow::framebuffer_size_callback);
 
     glfwSetCursorPosCallback(_window, &OpenGLWindow::mouse_callback);
@@ -170,23 +261,15 @@ bool OpenGLWindow::initGLEW() {
     return true;
 }
 
-bool OpenGLWindow::init() {
-    if (!initGLFW()) return false;
+Cube::Cube() : _vertices(NULL) {}
 
-    if (!createWindow()) return false;
+Cube::~Cube() {
+    destory();
+}
 
-    initOpenGLVersion();
-
-    if (!initGLEW()) return false;
-
-    // init graphic
-    LoadImage image1;
-    if (!image1.load("pic/container.jpg")) return false;
-    LoadImage image2;
-    if (!image2.load("pic/awesomeface.png")) return false;
-
-	static float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+bool Cube::init() {
+    _vertices = new std::vector<float> {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -227,67 +310,60 @@ bool OpenGLWindow::init() {
 		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-
-
-	static unsigned int indices[] = {
-        0, 1, 3,  // 第一个三角形
-        1, 2, 3   // 第二个三角形
     };
 
 
-
-    glEnable(GL_DEPTH_TEST);
-
-
     glGenBuffers(1, &VBO);
-    // utDefer(glDeleteBuffers(1, &VBO));
-
-    glGenBuffers(1, &EBO);
-    // utDefer(glDeleteBuffers(1, &EBO));
-
     glGenVertexArrays(1, &VAO);
-    // utDefer(glDeleteVertexArrays(1, &VAO));
-
-
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image1.getWidth(), image1.getHeight(), 0,
-            GL_RGB, GL_UNSIGNED_BYTE, image1.getData());
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image2.getWidth(), image2.getHeight(), 0,
-            GL_RGBA, GL_UNSIGNED_BYTE, image2.getData());
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-
-    ourShader.init("simpleVertex.glsl", "simpleFragment.glsl");
-    ourShader.use();
-    ourShader.setInt("texture1", 0);
-    ourShader.setInt("texture2", 1);
 
     // 1. 绑定VAO
     glBindVertexArray(VAO);
     // 2. 复制顶点数组到缓冲中
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(_vertices->size()), 
+            &(*_vertices)[0], GL_STATIC_DRAW);
     // 3. 设置顶点属性指针
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+            (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    return true;
+}
+
+bool Cube::destory() {
+    if (_vertices) delete _vertices;
+
+    glDeleteBuffers(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    return true;
+}
+
+bool Cube::draw() {
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    return true;
+}
+
+bool OpenGLWindow::init() {
+    if (!initGLFW()) return false;
+
+    if (!createWindow()) return false;
+
+    initOpenGLVersion();
+
+    if (!initGLEW()) return false;
+
+    // init graphic
+    if (!_containerTex.load("pic/container.jpg")) return false;
+    if (!_smileTex.load("pic/awesomeface.png")) return false;
+
+    _ourShader.init("simpleVertex.glsl", "simpleFragment.glsl");
+
+    _cube.init();
 
     return true;
 }
@@ -305,11 +381,13 @@ bool OpenGLWindow::run() {
 	  glm::vec3( 1.5f,  0.2f, -1.5f), 
 	  glm::vec3(-1.3f,  1.0f, -1.5f)  
 	};
+
+    glEnable(GL_DEPTH_TEST);
     
     while (!glfwWindowShouldClose(_window)) {
         float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+        _deltaTime = currentFrame - _lastFrame;
+        _lastFrame = currentFrame;
         processInput(_window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -320,30 +398,32 @@ bool OpenGLWindow::run() {
         trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
         // 4. 绘制物体
-        ourShader.use();
+        _ourShader.use();
+        _ourShader.setInt("texture1", 0);
+        _ourShader.setInt("texture2", 1);
 
         glm::mat4 view = glm::mat4(1.0f);
-        view = camera.getViewMatrix();
-        ourShader.setMat4("view", view);
+        view = _camera.getViewMatrix();
+        _ourShader.setMat4("view", view);
 
         glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(camera.getZoom()), 1.0f * screenWidth / screenHeight, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
+        projection = glm::perspective(glm::radians(_camera.getZoom()), 1.0f * _winWidth /
+                _winHeight, 0.1f, 100.0f);
+        _ourShader.setMat4("projection", projection);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
+        glBindTexture(GL_TEXTURE_2D, _containerTex.getId());
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        glBindTexture(GL_TEXTURE_2D, _smileTex.getId());
 
-        glBindVertexArray(VAO);
         for (int i=0; i<10; ++i) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            ourShader.setMat4("model", model);
+            _ourShader.setMat4("model", model);
 
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            _cube.draw();
         }
 
         glfwSwapBuffers(_window);
@@ -355,6 +435,8 @@ bool OpenGLWindow::run() {
 
 void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+    OpenGLWindowInstance.setWidth(width);
+    OpenGLWindowInstance.setHeight(height);
 }
 
 void OpenGLWindow::processInput(GLFWwindow* window) {
@@ -364,16 +446,16 @@ void OpenGLWindow::processInput(GLFWwindow* window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.processKeyboard(CameraMovement::FORWARD, deltaTime);
+        _camera.processKeyboard(CameraMovement::FORWARD, _deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera.processKeyboard(CameraMovement::BACKWARD, deltaTime);
+        _camera.processKeyboard(CameraMovement::BACKWARD, _deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera.processKeyboard(CameraMovement::LEFT, deltaTime);
+        _camera.processKeyboard(CameraMovement::LEFT, _deltaTime);
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera.processKeyboard(CameraMovement::RIGHT, deltaTime);
+        _camera.processKeyboard(CameraMovement::RIGHT, _deltaTime);
     }
 }
 
@@ -388,18 +470,18 @@ void OpenGLWindow::mouse_callback(GLFWwindow* window, double xpos, double ypos) 
     lastX = xpos;
     lastY = ypos;
 
-    windowInstance->camera.processMouseMovement(xoffset, yoffset, init);
+    OpenGLWindowInstance.camera().processMouseMovement(xoffset, yoffset, init);
     init = false;
 }
 
 void OpenGLWindow::scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    windowInstance->camera.processMouseScroll(yoffset);
+    OpenGLWindowInstance.camera().processMouseScroll(yoffset);
 }
 
 int main() {
-    OpenGLWindow win;
-    if (!win.init()) return -1;
-    if (!win.run()) return -1;
+    if (!OpenGLWindowInstance.init()) return -1;
+    utDefer(OpenGLWindowInstance.destory());
+    if (!OpenGLWindowInstance.run()) return -1;
     return 0;
 }
 

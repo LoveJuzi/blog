@@ -158,3 +158,4 @@ endfunction
 
 map <C-e> :Ex<cr>
 map <C-d> :bf<cr>
+map gf gF

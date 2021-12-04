@@ -252,7 +252,7 @@ bool Cube::draw() {
     OpenGLInstance->glDrawElements(GL_TRIANGLES, _cubeIndices.size(), GL_UNSIGNED_INT, (GLvoid*)0);
 
     // release VAO
-    OpenGLInstance->glBindVertexArray(0);
+    // OpenGLInstance->glBindVertexArray(0);
 
     return true;
 }

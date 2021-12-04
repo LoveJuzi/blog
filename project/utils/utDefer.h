@@ -1,5 +1,5 @@
-#ifndef UTDEFER_H
-#define UTDEFER_H
+#ifndef UTDEFER_H_
+#define UTDEFER_H_
 
 template<typename Function>
 struct Deferer{
@@ -19,4 +19,4 @@ Deferer<Function> deferFunc(Function f) {
 #define __DEFER_3__(x)     __DEFER_2__(x, __COUNTER__)
 #define utDefer(expr)      auto __DEFER_3__(_defered_option_) = deferFunc([&](){expr;})
 
-#endif /* UTDEFER_H */
+#endif // UTDEFER_H_
