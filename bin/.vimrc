@@ -39,6 +39,8 @@ set hlsearch
 
 " set incsearch
 
+set nowrapscan
+
 set ignorecase
 
 set smartcase
@@ -59,6 +61,7 @@ set backspace=indent,eol,start
 
 set ruler
 
+nnoremap * *N
 " visual search
 xnoremap * :<C-u>call <SID>VSetSearch()<CR>/<C-R>=@/<CR><CR>
 xnoremap # :<C-u>call <SID>VSetSearch()<CR>?<C-R>=@/<CR><CR>
