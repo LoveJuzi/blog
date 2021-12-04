@@ -23,7 +23,7 @@ set t_Co=256
 filetype indent on 
 set autoindent
 
-set textwidth=90
+"set textwidth=90
 
 "set wrap
 
