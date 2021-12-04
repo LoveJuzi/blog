@@ -132,18 +132,55 @@ bool SmileTexture::destory() {
 class Cube {
 public:
     Cube();
-    ~Cube();
+    virtual ~Cube();
 
     bool init();
     bool destory();
     bool draw();
 
-private:
+protected:
     std::vector<float>* _vertices;
 
     unsigned int VAO;
     unsigned int VBO;
 };
+
+class WoodenBox : public Cube {
+public:
+    WoodenBox();
+    ~WoodenBox() override {}
+
+    const glm::vec3 getColor() const { return _color; }
+
+private:
+    glm::vec3 _color;
+};
+
+WoodenBox::WoodenBox()
+    : _color(1.0f, 0.5f, 0.31f) {
+}
+
+class LightCube : public Cube {
+public:
+    LightCube();
+    ~LightCube() override {}
+
+    const glm::vec3& getLightScale() const { return _lightScale; }
+    const glm::vec3& getLightPos() const { return _lightPos; }
+    const glm::vec3& getLightColor() const { return _lightColor; }
+
+private:
+    glm::vec3 _lightScale;
+    glm::vec3 _lightPos;
+
+    glm::vec3 _lightColor;
+};
+
+LightCube::LightCube()
+    : _lightPos(1.2f, 1.0f, 2.0f)
+    , _lightScale(0.2f)
+    , _lightColor(1.0f, 1.0f, 1.0f) {
+}
 
 Cube::Cube() : _vertices(NULL) {}
 
@@ -262,10 +299,8 @@ private:
     bool initGLEW();
 
 private:
-    bool _isInit = false;
-
     int  _winHeight = 600;
-    int  _winWidth = 800;
+    int  _winWidth  = 800;
     const char* _winName = "LearnOpenGL";
     
     GLFWwindow* _window = NULL;
@@ -274,21 +309,104 @@ private:
 
     float _deltaTime = 0.0f;
     float _lastFrame = 0.0f;
-    Shader _ourShader;
 
-    Cube _cube;
-    ContainerTexture _containerTex;
-    SmileTexture _smileTex;
+    Shader    _lightingShader;
+    WoodenBox _woodenBox;
+
+    LightCube _lightCube;
+    Shader    _lightCubeShader;
 };
 
 #define OpenGLWindowInstance (*(OpenGLWindow::getInstancePtr()))
 
 OpenGLWindow::OpenGLWindow()
-    : _camera(glm::vec3(0.0f, 0.0f, 3.0f)) {
+    : _camera(glm::vec3(0.0f, 0.0f, 5.0f)) {
 }
 
 OpenGLWindow::~OpenGLWindow() {
 }
+
+bool OpenGLWindow::init() {
+    if (!initGLFW()) return false;
+
+    if (!createWindow()) return false;
+
+    initOpenGLVersion();
+
+    if (!initGLEW()) return false;
+
+    if (!_lightingShader.init("lightingVertex.glsl", "lightingFragment.glsl")) {
+        return false;
+    }
+    if (!_woodenBox.init()) return false;
+
+    if (!_lightCubeShader.init("lightCubeVertex.glsl", "lightCubeFragment.glsl")) {
+        return false;
+    }
+    if (!_lightCube.init()) return false;
+
+    return true;
+}
+
+bool OpenGLWindow::run() {
+    // 启用深度测试
+    glEnable(GL_DEPTH_TEST);
+    
+    while (!glfwWindowShouldClose(_window)) {
+        processInput(_window);
+
+        // 需要扩展下 camera
+        glm::mat4 projection = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(_camera.getZoom()), 1.0f * _winWidth /
+                _winHeight, 0.1f, 100.0f);
+
+        // draw light
+        auto drawLight = [&]() {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, _lightCube.getLightPos());
+            model = glm::scale(model, _lightCube.getLightScale());
+
+            _lightCubeShader.use();
+            _lightCubeShader.setMat4("projection", projection);
+            _lightCubeShader.setMat4("view", _camera.getViewMatrix());
+            _lightCubeShader.setMat4("model", model);
+            _lightCubeShader.setVec3("lightColor", _lightCube.getLightColor());
+
+            _lightCube.draw();
+        };
+
+        // draw wooden box
+        auto drawWoodenBox = [&]() {
+            glm::mat4 model = glm::mat4(1.0f);
+
+            _lightingShader.use();
+            _lightingShader.setMat4("projection", projection);
+            _lightingShader.setMat4("view", _camera.getViewMatrix());
+            _lightingShader.setMat4("model", model);
+            _lightingShader.setVec3("objectColor", _woodenBox.getColor());
+            _lightingShader.setVec3("lightColor", _lightCube.getLightColor());
+
+            _woodenBox.draw();
+
+        };
+
+        // clear window
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // draw
+        drawLight();
+        drawWoodenBox();
+
+        // swap buffer
+        glfwSwapBuffers(_window);
+        glfwPollEvents();
+    }
+
+    return true;
+}
+
+
 
 bool OpenGLWindow::destory() {
     glfwTerminate();
@@ -301,7 +419,6 @@ bool OpenGLWindow::initGLFW() {
         return false;
     }
 
-    _isInit = true;
     return true;
 }
 
@@ -347,91 +464,6 @@ bool OpenGLWindow::initGLEW() {
     return true;
 }
 
-bool OpenGLWindow::init() {
-    if (!initGLFW()) return false;
-
-    if (!createWindow()) return false;
-
-    initOpenGLVersion();
-
-    if (!initGLEW()) return false;
-
-    // init graphic
-    if (!_containerTex.load("pic/container.jpg")) return false;
-    if (!_smileTex.load("pic/awesomeface.png")) return false;
-
-    _ourShader.init("simpleVertex.glsl", "simpleFragment.glsl");
-
-    _cube.init();
-
-    return true;
-}
-
-bool OpenGLWindow::run() {
-	static glm::vec3 cubePositions[] = {
-	  glm::vec3( 0.0f,  0.0f,  0.0f), 
-	  glm::vec3( 2.0f,  5.0f, -15.0f), 
-	  glm::vec3(-1.5f, -2.2f, -2.5f),  
-	  glm::vec3(-3.8f, -2.0f, -12.3f),  
-	  glm::vec3( 2.4f, -0.4f, -3.5f),  
-	  glm::vec3(-1.7f,  3.0f, -7.5f),  
-	  glm::vec3( 1.3f, -2.0f, -2.5f),  
-	  glm::vec3( 1.5f,  2.0f, -2.5f), 
-	  glm::vec3( 1.5f,  0.2f, -1.5f), 
-	  glm::vec3(-1.3f,  1.0f, -1.5f)  
-	};
-
-    glEnable(GL_DEPTH_TEST);
-    
-    while (!glfwWindowShouldClose(_window)) {
-        float currentFrame = glfwGetTime();
-        _deltaTime = currentFrame - _lastFrame;
-        _lastFrame = currentFrame;
-        processInput(_window);
-
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        // 4. 绘制物体
-        _ourShader.use();
-        _ourShader.setInt("texture1", 0);
-        _ourShader.setInt("texture2", 1);
-
-        glm::mat4 view = glm::mat4(1.0f);
-        view = _camera.getViewMatrix();
-        _ourShader.setMat4("view", view);
-
-        glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(_camera.getZoom()), 1.0f * _winWidth /
-                _winHeight, 0.1f, 100.0f);
-        _ourShader.setMat4("projection", projection);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _containerTex.getId());
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, _smileTex.getId());
-
-        for (int i=0; i<10; ++i) {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.5f, 1.0f, 0.0f));
-            _ourShader.setMat4("model", model);
-
-            _cube.draw();
-        }
-
-        glfwSwapBuffers(_window);
-        glfwPollEvents();
-    }
-
-    return true;
-}
-
 void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
     OpenGLWindowInstance.setWidth(width);
@@ -439,6 +471,10 @@ void OpenGLWindow::framebuffer_size_callback(GLFWwindow* window, int width, int 
 }
 
 void OpenGLWindow::processInput(GLFWwindow* window) {
+    _deltaTime = _lastFrame;
+    _lastFrame = glfwGetTime();
+    _deltaTime = _lastFrame - _deltaTime;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
         return;
