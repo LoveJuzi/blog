@@ -78,5 +78,10 @@ void Shader::setInt(const std::string& name, int value)
 void Shader::setMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat *value)
 {
     _glcore->glUniformMatrix4fv(_glcore->glGetUniformLocation(shaderProgram, name.c_str()),
-                                1, GL_FALSE, value);
+                                count, transpose, value);
+}
+
+void Shader::setVec3(const std::string &name, const glm::vec3 &value)
+{
+    _glcore->glUniform3fv(_glcore->glGetUniformLocation(shaderProgram, name.c_str()), 1, &value[0]);
 }

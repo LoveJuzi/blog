@@ -2,6 +2,7 @@
 #define SHADER_H
 
 #include <QOpenGLFunctions_3_3_Core>
+#include <glm/glm.hpp>
 
 class Shader
 {
@@ -16,6 +17,7 @@ public:
     void setInt(const std::string& name, int value);
     void setFloat(const std::string& name, int value);
     void setMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat *value);
+    void setVec3(const std::string& name, const glm::vec3& value);
 
     GLuint getID() const { return shaderProgram; }
 private:

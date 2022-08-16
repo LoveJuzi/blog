@@ -6,6 +6,7 @@ SquareLightSource::SquareLightSource(QOpenGLFunctions_3_3_Core* glcore)
     : GLObject(glcore)
 {
 
+    _lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 }
 
 static GLfloat vertices[] = {
@@ -65,6 +66,9 @@ int SquareLightSource::init()
 
     _shader->build("squarelightsource.vs.glsl", "squarelightsource.fs.glsl");
 
+    _shader->use();
+    _shader->setVec3("lightColor", _lightColor);
+
     return 0;
 }
 
@@ -88,3 +92,9 @@ int SquareLightSource::paint()
 
     return 0;
 }
+
+const glm::vec3& SquareLightSource::getLightColor() const
+{
+    return _lightColor;
+}
+

@@ -13,9 +13,13 @@ public:
     int init() override;
     int paint() override;
 
+    const glm::vec3& getLightColor() const;
+
 private:
     GLuint VAO;
     GLuint VBO;
+
+    glm::vec3 _lightColor;
 };
 
 #endif // SQUARELIGHTSOURCE_H

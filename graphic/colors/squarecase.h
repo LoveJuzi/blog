@@ -2,6 +2,7 @@
 #define SQUARECASE_H
 
 #include <QOpenGLFunctions_3_3_Core>
+#include <glm/glm.hpp>
 
 #include "globject.h"
 
@@ -20,6 +21,9 @@ private:
     GLuint EBO;
     GLuint texture1;
     GLuint texture2;
+    
+    glm::vec3 _lightColor;
+    glm::vec3 _objectColor;
 };
 
 #endif // SQUARECASE_H
