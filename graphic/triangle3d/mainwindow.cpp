@@ -65,8 +65,6 @@ void MainWindow::initializeGL()
 
     glVertexAttribPointer(0, 3,GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
     glEnableVertexAttribArray(0);
-
-
 }
 
 void MainWindow::resizeGL(int w, int h)
