@@ -11,16 +11,7 @@ endif
 function! MaximizeWindow()
     silent !wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
 endfunction
-set history=700
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => plugin on
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"call plug#begin('~/.vim/plugged')
-"
-""Plug 'vim-airline/vim-airline'
-""Plug 'vim-airline/vim-airline-themes'
-"
-"call plug#end()
+set history=1024
 
 " Enable filetype plugin
 set nocompatible
@@ -59,13 +50,13 @@ set tags+=/rts/builder/devpkgs_new_gcc_rhal5/share/boost/boost_1_55_0/tags
 " => VIM user interface
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Set 7 lines to the curors - when moving vertical..
-set so=5
+" set so=5
 
 set wildmenu "Turn on WiLd menu
 
 set ruler "Always show current position
 
-set cmdheight=1 "The commandbar height
+" set cmdheight=1 "The commandbar height
 
 set hid "Change buffer - without saving
 
@@ -115,14 +106,6 @@ autocmd BufRead Makefile set noexpandtab
 autocmd BufRead makefile set noexpandtab
 autocmd BufRead GNUmakefile set noexpandtab
 autocmd BufRead *target set noexpandtab
-
-"source /home/libin/vimplugin/a.vim
-"source /home/lixq/vimplugin/supertab.vim
-"for sketch
-"source /home/libin/vimplugin/sketch.vim
-":map <F1> :call ToggleSketch()<CR>
-
-"filetype plugin on
 
 command RMC %s!\s*//.*!!g | %s!\s*/\*\_.\{-}\*/\s*!!g
 set background=dark
@@ -240,9 +223,6 @@ set cursorline
 """""""""""""""""""""""""""""""""""""""""""""""""""
 set t_Co=256
 set laststatus=2
-let g:airline_theme="solarized"
-let g:airline_solarized_bg='dark'
-let g:airline_powerline_fonts = 1
 " display tabline
 let g:airline#extensions#tabline#enabled = 1
 " disable trailng
@@ -268,27 +248,6 @@ noremap <C-Up>    <C-W>k
 noremap <C-Left>  <C-W>h
 noremap <C-Right> <C-W>l
 noremap <C-Tab>   <C-W>r<C-W>w
-
-let g:airline_left_sep = '?'
-let g:airline_left_sep = '?'
-let g:airline_left_alt_sep = ''
-let g:airline_right_sep = '?'
-let g:airline_right_sep = '?'
-let g:airline_right_alt_sep = '?'
-let g:airline_symbols.crypt = '??'
-let g:airline_symbols.linenr = '?'
-let g:airline_symbols.linenr = '?'
-let g:airline_symbols.linenr = '?'
-let g:airline_symbols.linenr = '?'
-let g:airline_symbols.maxlinenr = ''
-let g:airline_symbols.maxlinenr = '㏑'
-let g:airline_symbols.branch = '?'
-let g:airline_symbols.paste = 'ρ'
-let g:airline_symbols.paste = 'T'
-let g:airline_symbols.paste = '∥'
-let g:airline_symbols.spell = '?'
-let g:airline_symbols.notexists = '?'
-let g:airline_symbols.whitespace = 'Ξ'
 
 " set no-highlight shortcut key
 map <S-W> :noh<CR>
@@ -351,7 +310,7 @@ set laststatus=2
 set shortmess+=A
 set autoread
 "nnoremap <C-w>s :split<CR
-noremap <C-L> zt:split<CR>
+"noremap <C-L> zt:split<CR>
 "set wildmenu
 "set wildmode=longest:list,full
 "set backspace=indent,eol,start
@@ -478,7 +437,7 @@ if has("gui_running")
 endif
 "set lines=1000
 "set columns=1000
-set colorcolumn=200
+set colorcolumn=90
 set noerrorbells
 set novisualbell
 
@@ -490,7 +449,7 @@ if has("gui_running")
 endif
 
 set guifont=monospace\ 11.8
-" set guifont=monospace\ 19
+" set guifont=monospace\ 20 
 
 "set nowrap
 
@@ -511,10 +470,10 @@ autocmd FileType perl set isfname-=:
 " it is a dangerous option, it means we do not generate temp file
 set noswapfile
 
-"set vb t_vb=
+set vb t_vb=
 
 "set winwidth=200
-set winheight=200
+"set winheight=200
 
 " disable Omni Completion
 set omnifunc=""
@@ -525,7 +484,7 @@ let OmniCpp_MayCompleteScope = 0
 noremap <C-m> :set columns=210<CR>:set lines=53<CR>
 
 " 开启行号显示
-set number
+" set number
 
 " 启用语法高亮
 syntax enable
@@ -569,15 +528,34 @@ set laststatus=2
 
 " 启用自动补全
 set completeopt=menuone,noselect
+set shortmess+=c
 
 " Enable YCM
 let g:loaded_ycm = 1
+
+""""""""""""""""""""coc.vim begin""""""""""""""""""""""""""""""""""""""""""""""
+" 启用 coc.nvim
+let g:coc_global_extensions = ['coc-snippets', 'coc-pyright', 'coc-clangd']
+
+" 配置 Python 语言服务器（pyright）
+autocmd FileType python setl omnifunc=python3complete#Complete
+let g:coc_server_pyright_use_pyls = 0
+
+autocmd FileType python map <S-f> :%!autopep8 -<cr>
+
+" 配置键盘快捷键
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+" 其他键盘映射
+nnoremap <leader>rn <Plug>(coc-rename)
+""""""""""""""""""""coc.vim end""""""""""""""""""""""""""""""""""""""""""""""""
 
 call plug#begin('~/.vim/plugged')
 Plug 'vim-python/python-syntax'
 Plug 'ycm-core/YouCompleteMe'
 Plug 'neomake/neomake'
-"Plug 'vim-airline/vim-airline'
-"Plug 'vim-airline/vim-airline-themes'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 call plug#end()
 
