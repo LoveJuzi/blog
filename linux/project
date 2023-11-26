@@ -1,0 +1,22 @@
+#!/bin/bash
+
+project=.
+x=0
+y=0
+
+if (( $# >= 1 )); then
+  project=$1
+fi
+
+project=`cd $project; pwd`
+
+if (( $# >= 2)); then
+  x=$2
+fi
+
+if (( $# >= 3)); then
+  y=$3
+fi
+
+gvim "+cd $project" "+set tags=./tags;,tags" "+set tags+=~/bin/polas/tags_0_0" "+set path+=$project/**" $project/.label_0_0 $project/.project_0_0 $project/.redir_0_0 $project/.tmp_0_0
+#gvim -geometry 100x25+$x+$y "+cd $project" "+set tags=./tags;,tags" "+set tags+=~/bin/polas/tags_0_0" "+set path+=$project/**" $project/.label_0_0 $project/.project_0_0 $project/.redir_0_0 $project/.tmp_0_0
