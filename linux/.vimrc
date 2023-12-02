@@ -396,7 +396,7 @@ function CurrentFilePath()
   if has('gui_running')
     execute 'let @+=expand("%:.")'
   else
-    execute 'let @1=expand("%:.")'
+    execute 'let @+=expand("%:.")'
   endif
   echohl WarningMsg | echo "Successful in get current file path." | echohl None
   normal `y
@@ -407,7 +407,7 @@ function CurrentAbsFilePath()
   if has('gui_running')
     execute 'let @+=expand("%:p")'
   else
-    execute 'let @1=expand("%:p")'
+    execute 'let @+=expand("%:p")'
   endif
   echohl WarningMsg | echo "Successful in get current file path." | echohl None
   normal `y
@@ -541,21 +541,29 @@ let g:coc_global_extensions = ['coc-snippets', 'coc-pyright', 'coc-clangd']
 autocmd FileType python setl omnifunc=python3complete#Complete
 let g:coc_server_pyright_use_pyls = 0
 
-autocmd FileType python map <S-f> :%!autopep8 -<cr>
+autocmd FileType python map <S-f> :let _cursor=getpos(".")<cr>:%!autopep8 -<cr>:call setpos(".", _cursor)<cr>
 
 " 配置键盘快捷键
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+"nmap <silent> gr <Plug>(coc-references)
 " 其他键盘映射
 nnoremap <leader>rn <Plug>(coc-rename)
 """"""""""""""""""""coc.vim end""""""""""""""""""""""""""""""""""""""""""""""""
+
+""""""""""""""""""""YouCompleteMe begin""""""""""""""""""""""""""""""""""""""""
+au BufRead,BufNewFile *.fs set filetype=glsl
+au BufRead,BufNewFile *.vs set filetype=glsl
+
+"let g:ycm_filetype_whitelist = {'glsl': 1}
+""""""""""""""""""""YouCompleteMe end""""""""""""""""""""""""""""""""""""""""""
 
 call plug#begin('~/.vim/plugged')
 Plug 'vim-python/python-syntax'
 Plug 'ycm-core/YouCompleteMe'
 Plug 'neomake/neomake'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'tikhomirov/vim-glsl'
 call plug#end()
 
